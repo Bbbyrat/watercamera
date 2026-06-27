@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Camera Test</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+    }
+
+    video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+    }
+  </style>
+</head>
+
+<body>
+  <video id="video" autoplay playsinline></video>
+
+  <script>
+    const video = document.getElementById("video");
+
+    async function startCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }, // 后摄像头（手机）
+        audio: false
+      });
+
+      video.srcObject = stream;
+    }
+
+    startCamera();
+  </script>
+</body>
+</html>
