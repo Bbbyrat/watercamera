@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Camera Test</title>
+
   <style>
     body {
       margin: 0;
@@ -18,25 +19,57 @@
       height: 100vh;
       object-fit: cover;
     }
+
+    button {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      padding: 12px 20px;
+      font-size: 16px;
+    }
   </style>
 </head>
 
 <body>
+
   <video id="video" autoplay playsinline></video>
+
+  <button id="snap">拍照</button>
+  <canvas id="canvas" style="display:none;"></canvas>
 
   <script>
     const video = document.getElementById("video");
+    const button = document.getElementById("snap");
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
 
     async function startCamera() {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }, // 后摄像头（手机）
+        video: { facingMode: "environment" },
         audio: false
       });
 
       video.srcObject = stream;
     }
 
+    button.onclick = function () {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const image = canvas.toDataURL("image/png");
+
+      const link = document.createElement("a");
+      link.href = image;
+      link.download = "photo.png";
+      link.click();
+    };
+
     startCamera();
   </script>
+
 </body>
 </html>
