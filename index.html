@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Camera Test</title>
+  <title>Camera Slime</title>
 
   <style>
     body {
@@ -29,12 +29,29 @@
       padding: 12px 20px;
       font-size: 16px;
     }
+
+    #slime {
+      position: fixed;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #d8f3ff, #5aaeff);
+      box-shadow: 0 0 20px rgba(90, 174, 255, 0.6);
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      filter: blur(1px);
+      opacity: 0.85;
+    }
   </style>
 </head>
 
 <body>
 
   <video id="video" autoplay playsinline></video>
+
+  <div id="slime"></div>
 
   <button id="snap">拍照</button>
   <canvas id="canvas" style="display:none;"></canvas>
@@ -44,6 +61,14 @@
     const button = document.getElementById("snap");
     const canvas = document.getElementById("canvas");
     const context = canvas.getContext("2d");
+
+    const slime = document.getElementById("slime");
+
+    let x = window.innerWidth / 2;
+    let y = window.innerHeight / 2;
+
+    let vx = 0;
+    let vy = 0;
 
     async function startCamera() {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -68,6 +93,31 @@
       link.click();
     };
 
+    window.addEventListener("deviceorientation", (event) => {
+      let gamma = event.gamma;
+      let beta = event.beta;
+
+      vx += gamma * 0.05;
+      vy += beta * 0.05;
+    });
+
+    function update() {
+      vx *= 0.95;
+      vy *= 0.95;
+
+      x += vx;
+      y += vy;
+
+      x = Math.max(60, Math.min(window.innerWidth - 60, x));
+      y = Math.max(60, Math.min(window.innerHeight - 60, y));
+
+      slime.style.left = x + "px";
+      slime.style.top = y + "px";
+
+      requestAnimationFrame(update);
+    }
+
+    update();
     startCamera();
   </script>
 
