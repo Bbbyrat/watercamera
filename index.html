@@ -19,6 +19,7 @@
       height: 100vh;
       object-fit: cover;
       z-index: 0;
+      display: none;
     }
 
     button {
@@ -51,12 +52,22 @@
      width: 900px;
      height: 900px;
    }
+   #canvas {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100vw;
+     height: 100vh;
+     z-index: 0;
+}
+    
   </style>
 </head>
 
 <body>
 
   <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
 
   <svg id="slime" viewBox="0 0 200 200">
   <path id="blob"
