@@ -124,16 +124,14 @@
       x += vx;
       y += vy;
 
-      x = Math.max(60, Math.min(window.innerWidth - 60, x));
-      y = Math.max(60, Math.min(window.innerHeight - 60, y));
-
       let speed = Math.sqrt(vx * vx + vy * vy);
 
       let stretchX = 1 + speed * 0.03;
       let stretchY = 1 - speed * 0.02;
 
       slime.style.transform = `
-        translate(${x - 60}px, ${y - 60}px)
+        translate(${x}px, ${y}px)
+        translate(-60px, -60px)
         scale(${stretchX}, ${stretchY})
       `;
 
