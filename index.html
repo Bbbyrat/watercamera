@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Camera Slime Debug</title>
+  <title>Camera Slime Touch</title>
 
   <style>
     body {
@@ -31,7 +31,6 @@
       font-size: 16px;
     }
 
-    /* 🧠 调试面板 */
     #debug {
       position: fixed;
       top: 10px;
@@ -84,8 +83,7 @@
 
   <div id="slime"></div>
 
-  <!-- 🧠 调试显示 -->
-  <div id="debug">waiting...</div>
+  <div id="debug">touch to move slime</div>
 
   <button id="snap">启动</button>
   <canvas id="canvas" style="display:none;"></canvas>
@@ -111,40 +109,20 @@
       video.srcObject = stream;
     }
 
-    async function enableMotion() {
+    // 🧠 核心改动：用手指控制“重力方向”
+    window.addEventListener("touchmove", (e) => {
+      let t = e.touches[0];
 
-  debug.innerText = "requesting motion...";
+      let dx = t.clientX - window.innerWidth / 2;
+      let dy = t.clientY - window.innerHeight / 2;
 
-  // ❗不再用 requestPermission（很多浏览器直接失败）
+      vx += dx * 0.0008;
+      vy += dy * 0.0008;
 
-  function handleMotion(event) {
-
-    let gamma = event.gamma;
-    let beta = event.beta;
-
-    if (gamma === null && beta === null) {
-      debug.innerText = "motion blocked";
-      return;
-    }
-
-    // 🧠 更新显示
-    debug.innerText =
-      "gamma: " + (gamma?.toFixed(2) || 0) +
-      "\nbeta: " + (beta?.toFixed(2) || 0);
-
-    vx += (gamma || 0) * 0.08;
-    vy += (beta || 0) * 0.08;
-  }
-
-  window.addEventListener("deviceorientation", handleMotion);
-
-  // 🧠 强制提示（判断有没有进来）
-  setTimeout(() => {
-    if (debug.innerText === "requesting motion...") {
-      debug.innerText = "no motion event detected";
-    }
-  }, 2000);
-}
+      debug.innerText =
+        "touch dx: " + dx.toFixed(1) +
+        "\ntouch dy: " + dy.toFixed(1);
+    });
 
     function update() {
       vx *= 0.95;
@@ -170,10 +148,10 @@
       requestAnimationFrame(update);
     }
 
-   button.onclick = async function () {
-     await startCamera();
-     enableMotion(); 
-   };
+    button.onclick = async function () {
+      await startCamera();
+    };
+
     update();
   </script>
 
