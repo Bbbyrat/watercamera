@@ -53,11 +53,13 @@
 
       mix-blend-mode: screen;
 
-      left: 50%;
-      top: 50%;
+      left: 0;
+      top: 0;
 
-      opacity: 0.9;
       z-index: 9999;
+      opacity: 0.9;
+
+      transform-origin: center;
     }
   </style>
 </head>
@@ -95,14 +97,13 @@
     }
 
     async function enableMotion() {
-      // iOS权限
       if (typeof DeviceOrientationEvent !== "undefined" &&
           typeof DeviceOrientationEvent.requestPermission === "function") {
 
         const permission = await DeviceOrientationEvent.requestPermission();
 
         if (permission !== "granted") {
-          alert("没有开启陀螺仪权限");
+          alert("没有陀螺仪权限");
           return;
         }
       }
