@@ -31,36 +31,39 @@
       font-size: 16px;
     }
 
-    #slime {
-      position: fixed;
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
+#slime {
+  position: fixed;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
 
-  /* 核心：水感渐变 */
-      background: radial-gradient(
-        circle at 30% 30%,
-        rgba(255, 255, 255, 0.95),
-        rgba(140, 210, 255, 0.9),
-        rgba(40, 120, 255, 0.8)
-      );
+  /* 水体颜色 */
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 255, 255, 0.9),
+    rgba(140, 210, 255, 0.75),
+    rgba(40, 120, 255, 0.6)
+  );
 
-  /* 水的“透亮感” */
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
+  /* 关键：玻璃感 */
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 
-  /* 发光边缘 */
-      box-shadow:
-        0 0 25px rgba(120, 200, 255, 0.6),
-        inset -10px -10px 20px rgba(0, 80, 200, 0.3);
+  /* 体积 + 发光 */
+  box-shadow:
+    0 0 25px rgba(120, 200, 255, 0.4),
+    inset -10px -10px 20px rgba(0, 80, 200, 0.2);
 
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 9999;
+  /* 轻微“光学融合” */
+  mix-blend-mode: screen;
 
-      opacity: 0.95;
-    }
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+
+  opacity: 0.9;
+}
   </style>
 </head>
 
