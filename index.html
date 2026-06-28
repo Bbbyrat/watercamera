@@ -44,16 +44,13 @@
       font-family: monospace;
     }
 
-    #slime {
-  position: fixed;
-  width: 180px;
-  height: 180px;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 9999;
-  filter: blur(0.5px);
-}
+   #slime {
+    position: fixed;
+     left: 0;
+     top: 0;
+     width: 180px;
+     height: 180px;
+   }
   </style>
 </head>
 
@@ -133,8 +130,7 @@
       let stretchY = 1 - speed * 0.02;
 
       slime.style.transform = `
-        translate(${x}px, ${y}px)
-        translate(-90px, -90px)
+        translate(${x - 90}px, ${y - 90}px)
         scale(${stretchX}, ${stretchY})
       `;
 
