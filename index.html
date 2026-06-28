@@ -108,8 +108,13 @@ async function startCamera() {
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  window.addEventListener("resize", () => {
+   canvas.width = window.innerWidth;
+   canvas.height = window.innerHeight;
+ });
   draw();
   }
+
 
 function draw() {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
