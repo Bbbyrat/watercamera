@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Slime Camera Clean Version</title>
+  <title>Camera Slime Touch</title>
 
   <style>
     body {
@@ -12,26 +12,13 @@
     }
 
     video {
-      display: none; /* 不直接显示，用canvas画 */
-    }
-
-    canvas {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
+      object-fit: cover;
       z-index: 0;
-    }
-
-    #slime {
-      position: fixed;
-      width: 220px;
-      height: 220px;
-      left: 0;
-      top: 0;
-      z-index: 10;
-      pointer-events: none;
     }
 
     button {
@@ -39,7 +26,7 @@
       bottom: 30px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 20;
+      z-index: 10;
       padding: 12px 20px;
       font-size: 16px;
     }
@@ -48,173 +35,153 @@
       position: fixed;
       top: 10px;
       left: 10px;
-      z-index: 999;
+      z-index: 99999;
       color: white;
       font-size: 14px;
       background: rgba(0,0,0,0.5);
-      padding: 6px 10px;
+      padding: 8px;
       border-radius: 6px;
       font-family: monospace;
     }
+
+   #slime {
+    position: fixed;
+     left: 0;
+     top: 0;
+     width: 900px;
+     height: 900px;
+   }
   </style>
 </head>
 
 <body>
 
-<video id="video" autoplay playsinline></video>
-<canvas id="canvas"></canvas>
+  <video id="video" autoplay playsinline></video>
 
-<div id="slime">
-<svg viewBox="0 0 200 200">
-  <path id="blob" fill="url(#grad)" d=""></path>
+  <svg id="slime" viewBox="0 0 200 200">
+  <path id="blob"
+    fill="url(#grad)"
+    d="M100 100"
+  />
 
   <defs>
     <radialGradient id="grad">
-      <stop offset="0%" stop-color="rgba(255,255,255,0.95)" />
+      <stop offset="0%" stop-color="rgba(255,255,255,0.9)" />
       <stop offset="50%" stop-color="rgba(140,210,255,0.75)" />
       <stop offset="100%" stop-color="rgba(40,120,255,0.6)" />
     </radialGradient>
   </defs>
 </svg>
-</div>
 
-<button id="btn">启动</button>
-<div id="debug">ready</div>
+  <div id="debug">touch to move slime</div>
 
-<script>
-const video = document.getElementById("video");
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+  <button id="snap">启动</button>
+  <canvas id="canvas" style="display:none;"></canvas>
 
-const slime = document.getElementById("slime");
-const debug = document.getElementById("debug");
+  <script>
+    const video = document.getElementById("video");
+    const button = document.getElementById("snap");
+    const slime = document.getElementById("slime");
+    const debug = document.getElementById("debug");
 
-let x = window.innerWidth / 2;
-let y = window.innerHeight / 2;
+    let x = window.innerWidth / 2;
+    let y = window.innerHeight / 2;
 
-let vx = 0;
-let vy = 0;
+    let vx = 0;
+    let vy = 0;
 
-let slimeScale = 1.8;
+    async function startCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false
+      });
 
-function setupCanvas() {
-  const dpr = window.devicePixelRatio || 1;
+      video.srcObject = stream;
+    }
 
-  canvas.width = window.innerWidth * dpr;
-  canvas.height = window.innerHeight * dpr;
+  
+    window.addEventListener("touchmove", (e) => {
+      let t = e.touches[0];
 
-  canvas.style.width = window.innerWidth + "px";
-  canvas.style.height = window.innerHeight + "px";
+      let dx = t.clientX - window.innerWidth / 2;
+      let dy = t.clientY - window.innerHeight / 2;
 
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-}
+      vx += dx * 0.0002;
+      vy += dy * 0.0002;
 
-async function startCamera() {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "environment" },
-    audio: false
-  });
+      debug.innerText =
+         "dx: " + dx.toFixed(1) +
+         "\ndy: " + dy.toFixed(1) +
+         "\nvx: " + vx.toFixed(3) +
+         "\nvy: " + vy.toFixed(3);
+         });
 
-  video.srcObject = stream;
-  await video.play();
+    function update() {
+      vx *= 0.95;
+      vy *= 0.95;
 
-  setupCanvas();
+      x += vx;
+      y += vy;
 
-  window.addEventListener("resize", setupCanvas);
+      x = Math.max(80, Math.min(window.innerWidth - 80, x));
+      y = Math.max(80, Math.min(window.innerHeight - 80, y));
 
-  draw();
-}
+      let speed = Math.sqrt(vx * vx + vy * vy);
 
-function draw() {
+      let stretchX = 1 + vx * 0.01;
+      let stretchY = 1 + vy * 0.01;
 
-  const vw = video.videoWidth;
-  const vh = video.videoHeight;
+      slime.style.transform = `
+        translate(${x - 450}px, ${y - 450}px)
+        scale(5)
+        scale(${stretchX}, ${stretchY})
+      `;
 
-  const cw = canvas.width;
-  const ch = canvas.height;
+      requestAnimationFrame(update);
+    }
 
-  // 🔥 关键：保持比例裁剪（cover效果）
-  const scale = Math.max(cw / vw, ch / vh);
+    button.onclick = async function () {
+      await startCamera();
+    };
 
-  const offsetX = (cw - vw * scale) / 2;
-  const offsetY = (ch - vh * scale) / 2;
-
-  ctx.clearRect(0, 0, cw, ch);
-
-  ctx.drawImage(
-    video,
-    offsetX, offsetY,
-    vw * scale,
-    vh * scale
-  );
-
-  requestAnimationFrame(draw);
-}
-
-/* 🟢 动画 */
-function update() {
-
-  vx *= 0.92;
-  vy *= 0.92;
-
-  x += vx;
-  y += vy;
-
-  x = Math.max(100, Math.min(window.innerWidth - 100, x));
-  y = Math.max(100, Math.min(window.innerHeight - 100, y));
-
-  let speed = Math.sqrt(vx*vx + vy*vy);
-
-  let stretchX = 1 + vx * 0.01;
-  let stretchY = 1 + vy * 0.01;
-
-  slime.style.transform = `
-    translate(${x - 110}px, ${y - 110}px)
-    scale(${slimeScale})
-    scale(${stretchX}, ${stretchY})
-  `;
-
-  debug.innerText =
-    "speed: " + speed.toFixed(3);
-
-  requestAnimationFrame(update);
-}
-
-/* 🟢 史莱姆形状 */
-function makeBlob() {
-  const points = 18;
-  const step = Math.PI * 2 / points;
+    update();
+   
+   function makeBlob() {
+  const points = 20; // ⭐增加点数（越多越圆）
+  const step = (Math.PI * 2) / points;
 
   let path = "";
 
   for (let i = 0; i < points; i++) {
+
     let angle = i * step;
-    let noise = Math.sin(i * 0.8) * 6 + Math.random() * 3;
-    let r = 70 + noise;
 
-    let px = 100 + Math.cos(angle) * r;
-    let py = 100 + Math.sin(angle) * r;
+    // 🧠 核心：让变化变“连续”
+    let noise = Math.sin(i * 0.8) * 8 + Math.random() * 4;
 
-    path += (i === 0 ? "M" : "L") + px + " " + py + " ";
+    let r = 80 + noise;
+
+    let x = 100 + Math.cos(angle) * r;
+    let y = 100 + Math.sin(angle) * r;
+
+    path += (i === 0 ? "M" : "L") + x + " " + y + " ";
   }
 
   path += "Z";
   return path;
 }
 
-function animateBlob() {
-  document.getElementById("blob")
-    .setAttribute("d", makeBlob());
+    const blob = document.getElementById("blob");
 
-  requestAnimationFrame(animateBlob);
-}
+    function initBlob() {
+      blob.setAttribute("d", makeBlob());
+    }
 
-document.getElementById("btn").onclick = () => {
-  startCamera();
-  update();
-  animateBlob();
-};
-</script>
+    initBlob();
+    setInterval(() => {
+     blob.setAttribute("d", makeBlob());
+     }, 1200);
+  </script>
 
 </body>
 </html>
