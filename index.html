@@ -103,11 +103,11 @@
     window.addEventListener("touchmove", (e) => {
       let t = e.touches[0];
 
-      let dx =  window.innerWidth / 2;
-      let dy =  window.innerHeight / 2;
+      let dx = t.clientX - window.innerWidth / 2;
+      let dy = t.clientY - window.innerHeight / 2;
 
-      vx += dx * 0.0008;
-      vy += dy * 0.0008;
+      vx += dx * 0.0004;
+      vy += dy * 0.0004;
 
       debug.innerText =
         "touch dx: " + dx.toFixed(1) +
