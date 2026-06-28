@@ -12,7 +12,7 @@
     }
 
     video {
-      display: none;
+      display: none; /* 不直接显示，用canvas画 */
     }
 
     canvas {
@@ -32,7 +32,6 @@
       top: 0;
       z-index: 10;
       pointer-events: none;
-      filter: url(#goo);
     }
 
     button {
@@ -71,20 +70,10 @@
 
   <defs>
     <radialGradient id="grad">
-      <stop offset="0%" stop-color="rgba(255,255,255,0.6)" />
-      <stop offset="50%" stop-color="rgba(140,210,255,0.4)" />
-      <stop offset="100%" stop-color="rgba(40,120,255,0.25)" />
+      <stop offset="0%" stop-color="rgba(255,255,255,0.95)" />
+      <stop offset="50%" stop-color="rgba(140,210,255,0.75)" />
+      <stop offset="100%" stop-color="rgba(40,120,255,0.6)" />
     </radialGradient>
-
-    <filter id="goo">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
-      <feColorMatrix in="blur" mode="matrix"
-        values="
-          1 0 0 0 0
-          0 1 0 0 0
-          0 0 1 0 0
-          0 0 0 18 -8"/>
-    </filter>
   </defs>
 </svg>
 </div>
@@ -93,7 +82,6 @@
 <div id="debug">ready</div>
 
 <script>
-
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -107,9 +95,8 @@ let y = window.innerHeight / 2;
 let vx = 0;
 let vy = 0;
 
-let slimeScale = 2.5;
+let slimeScale = 1.8;
 
-/* ===== 摄像头 ===== */
 async function startCamera() {
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: "environment" },
@@ -130,18 +117,18 @@ function draw() {
   requestAnimationFrame(draw);
 }
 
-/* ===== touch控制 ===== */
+/* 🟢 touch 控制 */
 window.addEventListener("touchmove", (e) => {
   let t = e.touches[0];
 
   let dx = t.clientX - window.innerWidth / 2;
   let dy = t.clientY - window.innerHeight / 2;
 
-  vx += dx * 0.0009;
-  vy += dy * 0.0009;
+  vx += dx * 0.0003;
+  vy += dy * 0.0003;
 });
 
-/* ===== 主动画 ===== */
+/* 🟢 动画 */
 function update() {
 
   vx *= 0.92;
@@ -155,42 +142,32 @@ function update() {
 
   let speed = Math.sqrt(vx*vx + vy*vy);
 
-  let angle = Math.atan2(vy, vx);
+  let stretchX = 1 + vx * 0.01;
+  let stretchY = 1 + vy * 0.01;
 
-  let intensity = Math.min(speed * 2.5, 1.2);
+  slime.style.transform = `
+    translate(${x - 110}px, ${y - 110}px)
+    scale(${slimeScale})
+    scale(${stretchX}, ${stretchY})
+  `;
 
-  let squashX = 1 + vx * 0.02 * intensity;
-  let squashY = 1 - vy * 0.02 * intensity;
-
-  let baseScale = slimeScale;
-
-  slime.style.transform =
-    `translate(${x - 110}px, ${y - 110}px)
-     rotate(${angle}rad)
-     scale(${baseScale * squashX}, ${baseScale * squashY})`;
-
-  debug.innerText = "speed: " + speed.toFixed(3);
+  debug.innerText =
+    "speed: " + speed.toFixed(3);
 
   requestAnimationFrame(update);
 }
 
-/* ===== blob生成（关键修复：time真的在流动） ===== */
-function makeBlob(time) {
-
+/* 🟢 史莱姆形状 */
+function makeBlob() {
   const points = 18;
   const step = Math.PI * 2 / points;
 
   let path = "";
 
   for (let i = 0; i < points; i++) {
-
     let angle = i * step;
-
-    let wave =
-      Math.sin(i * 0.8 + time * 0.002) * 8 +
-      Math.sin(i * 1.7 - time * 0.0015) * 4;
-
-    let r = 70 + wave;
+    let noise = Math.sin(i * 0.8) * 6 + Math.random() * 3;
+    let r = 70 + noise;
 
     let px = 100 + Math.cos(angle) * r;
     let py = 100 + Math.sin(angle) * r;
@@ -198,24 +175,22 @@ function makeBlob(time) {
     path += (i === 0 ? "M" : "L") + px + " " + py + " ";
   }
 
-  return path + "Z";
+  path += "Z";
+  return path;
 }
 
-/* ===== blob动画（修复：直接用RAF时间） ===== */
-function animateBlob(time) {
+function animateBlob() {
   document.getElementById("blob")
-    .setAttribute("d", makeBlob(time));
+    .setAttribute("d", makeBlob());
 
   requestAnimationFrame(animateBlob);
 }
 
-/* ===== 启动 ===== */
 document.getElementById("btn").onclick = () => {
   startCamera();
   update();
-  animateBlob(0);
+  animateBlob();
 };
-
 </script>
 
 </body>
