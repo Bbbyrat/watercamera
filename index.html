@@ -104,13 +104,12 @@ async function startCamera() {
   });
 
   video.srcObject = stream;
+  await video.play();
 
-  video.onloadedmetadata = () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    draw();
-  };
-}
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  draw();
+  }
 
 function draw() {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
