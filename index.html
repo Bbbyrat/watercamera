@@ -102,7 +102,7 @@
       video.srcObject = stream;
     }
 
-    // 🧠 核心改动：用手指控制“重力方向”
+  
     window.addEventListener("touchmove", (e) => {
       let t = e.touches[0];
 
@@ -124,8 +124,8 @@
       x += vx;
       y += vy;
 
-      x = Math.max(60, Math.min(window.innerWidth - 60, x));
-      y = Math.max(60, Math.min(window.innerHeight - 60, y));
+      x = Math.max(80, Math.min(window.innerWidth - 80, x));
+      y = Math.max(80, Math.min(window.innerHeight - 80, y));
 
       let speed = Math.sqrt(vx * vx + vy * vy);
 
@@ -134,7 +134,7 @@
 
       slime.style.transform = `
         translate(${x}px, ${y}px)
-        translate(-60px, -60px)
+        translate(-90px, -90px)
         scale(${stretchX}, ${stretchY})
       `;
 
