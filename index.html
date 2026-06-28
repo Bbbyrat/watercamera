@@ -59,7 +59,6 @@
 
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%);
   z-index: 9999;
 
   opacity: 0.9;
@@ -133,6 +132,14 @@
 
       slime.style.left = x + "px";
       slime.style.top = y + "px";
+      let speed = Math.sqrt(vx * vx + vy * vy);
+      let stretchX = 1 + speed * 0.02;
+      let stretchY = 1 - speed * 0.01;
+
+      slime.style.transform = `
+         translate(-50%, -50%)
+         scale(${stretchX}, ${stretchY})
+       `;
 
       requestAnimationFrame(update);
     }
