@@ -130,16 +130,15 @@
       x = Math.max(60, Math.min(window.innerWidth - 60, x));
       y = Math.max(60, Math.min(window.innerHeight - 60, y));
 
-      slime.style.left = x + "px";
-      slime.style.top = y + "px";
       let speed = Math.sqrt(vx * vx + vy * vy);
-      let stretchX = 1 + speed * 0.02;
-      let stretchY = 1 - speed * 0.01;
+
+      let stretchX = 1 + speed * 0.03;
+      let stretchY = 1 - speed * 0.02;
 
       slime.style.transform = `
-         translate(-50%, -50%)
-         scale(${stretchX}, ${stretchY})
-       `;
+        translate(${x - 60}px, ${y - 60}px)
+        scale(${stretchX}, ${stretchY})
+      `;
 
       requestAnimationFrame(update);
     }
