@@ -97,6 +97,18 @@ let vy = 0;
 
 let slimeScale = 1.8;
 
+function setupCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+
+  canvas.style.width = window.innerWidth + "px";
+  canvas.style.height = window.innerHeight + "px";
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
 async function startCamera() {
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: "environment" },
@@ -106,15 +118,12 @@ async function startCamera() {
   video.srcObject = stream;
   await video.play();
 
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  window.addEventListener("resize", () => {
-   canvas.width = window.innerWidth;
-   canvas.height = window.innerHeight;
- });
-  draw();
-  }
+  setupCanvas();
 
+  window.addEventListener("resize", setupCanvas);
+
+  draw();
+}
 
 function draw() {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
