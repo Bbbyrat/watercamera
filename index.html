@@ -126,20 +126,30 @@ async function startCamera() {
 }
 
 function draw() {
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+
+  const cw = canvas.width;
+  const ch = canvas.height;
+
+  // 🔥 关键：保持比例裁剪（cover效果）
+  const scale = Math.max(cw / vw, ch / vh);
+
+  const offsetX = (cw - vw * scale) / 2;
+  const offsetY = (ch - vh * scale) / 2;
+
+  ctx.clearRect(0, 0, cw, ch);
+
+  ctx.drawImage(
+    video,
+    offsetX, offsetY,
+    vw * scale,
+    vh * scale
+  );
+
   requestAnimationFrame(draw);
 }
-
-/* 🟢 touch 控制 */
-window.addEventListener("touchmove", (e) => {
-  let t = e.touches[0];
-
-  let dx = t.clientX - window.innerWidth / 2;
-  let dy = t.clientY - window.innerHeight / 2;
-
-  vx += dx * 0.0003;
-  vy += dy * 0.0003;
-});
 
 /* 🟢 动画 */
 function update() {
