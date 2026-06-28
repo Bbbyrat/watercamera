@@ -113,31 +113,38 @@
 
     async function enableMotion() {
 
-      // iOS权限
-      if (typeof DeviceOrientationEvent !== "undefined" &&
-          typeof DeviceOrientationEvent.requestPermission === "function") {
+  debug.innerText = "requesting motion...";
 
-        const permission = await DeviceOrientationEvent.requestPermission();
-        if (permission !== "granted") {
-          alert("没有陀螺仪权限");
-          return;
-        }
-      }
+  // ❗不再用 requestPermission（很多浏览器直接失败）
 
-      window.addEventListener("deviceorientation", (event) => {
+  function handleMotion(event) {
 
-        let gamma = event.gamma || 0;
-        let beta = event.beta || 0;
+    let gamma = event.gamma;
+    let beta = event.beta;
 
-        // 🧠 显示调试数据（关键！）
-        debug.innerText =
-          "gamma: " + gamma.toFixed(2) +
-          "\nbeta: " + beta.toFixed(2);
-
-        vx += gamma * 0.08;
-        vy += beta * 0.08;
-      });
+    if (gamma === null && beta === null) {
+      debug.innerText = "motion blocked";
+      return;
     }
+
+    // 🧠 更新显示
+    debug.innerText =
+      "gamma: " + (gamma?.toFixed(2) || 0) +
+      "\nbeta: " + (beta?.toFixed(2) || 0);
+
+    vx += (gamma || 0) * 0.08;
+    vy += (beta || 0) * 0.08;
+  }
+
+  window.addEventListener("deviceorientation", handleMotion);
+
+  // 🧠 强制提示（判断有没有进来）
+  setTimeout(() => {
+    if (debug.innerText === "requesting motion...") {
+      debug.innerText = "no motion event detected";
+    }
+  }, 2000);
+}
 
     function update() {
       vx *= 0.95;
@@ -163,11 +170,10 @@
       requestAnimationFrame(update);
     }
 
-    button.onclick = async function () {
-      await startCamera();
-      await enableMotion();
-    };
-
+   button.onclick = async function () {
+     await startCamera();
+     enableMotion(); 
+   };
     update();
   </script>
 
