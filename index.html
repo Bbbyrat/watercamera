@@ -31,38 +31,34 @@
       font-size: 16px;
     }
 
-#slime {
-  position: fixed;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
+    #slime {
+      position: fixed;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
 
-  /* 水体颜色 */
-  background: radial-gradient(
-    circle at 30% 30%,
-    rgba(255, 255, 255, 0.9),
-    rgba(140, 210, 255, 0.75),
-    rgba(40, 120, 255, 0.6)
-  );
+      background: radial-gradient(
+        circle at 30% 30%,
+        rgba(255, 255, 255, 0.9),
+        rgba(140, 210, 255, 0.75),
+        rgba(40, 120, 255, 0.6)
+      );
 
-  /* 关键：玻璃感 */
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
 
-  /* 体积 + 发光 */
-  box-shadow:
-    0 0 25px rgba(120, 200, 255, 0.4),
-    inset -10px -10px 20px rgba(0, 80, 200, 0.2);
+      box-shadow:
+        0 0 25px rgba(120, 200, 255, 0.4),
+        inset -10px -10px 20px rgba(0, 80, 200, 0.2);
 
-  /* 轻微“光学融合” */
-  mix-blend-mode: screen;
+      mix-blend-mode: screen;
 
-  left: 50%;
-  top: 50%;
-  z-index: 9999;
+      left: 50%;
+      top: 50%;
 
-  opacity: 0.9;
-}
+      opacity: 0.9;
+      z-index: 9999;
+    }
   </style>
 </head>
 
@@ -72,7 +68,7 @@
 
   <div id="slime"></div>
 
-  <button id="snap">拍照</button>
+  <button id="snap">启动 + 拍照</button>
   <canvas id="canvas" style="display:none;"></canvas>
 
   <script>
@@ -98,27 +94,27 @@
       video.srcObject = stream;
     }
 
-    button.onclick = function () {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+    async function enableMotion() {
+      // iOS权限
+      if (typeof DeviceOrientationEvent !== "undefined" &&
+          typeof DeviceOrientationEvent.requestPermission === "function") {
 
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const permission = await DeviceOrientationEvent.requestPermission();
 
-      const image = canvas.toDataURL("image/png");
+        if (permission !== "granted") {
+          alert("没有开启陀螺仪权限");
+          return;
+        }
+      }
 
-      const link = document.createElement("a");
-      link.href = image;
-      link.download = "photo.png";
-      link.click();
-    };
+      window.addEventListener("deviceorientation", (event) => {
+        let gamma = event.gamma || 0;
+        let beta = event.beta || 0;
 
-    window.addEventListener("deviceorientation", (event) => {
-      let gamma = event.gamma;
-      let beta = event.beta;
-
-      vx += gamma * 0.05;
-      vy += beta * 0.05;
-    });
+        vx += gamma * 0.05;
+        vy += beta * 0.05;
+      });
+    }
 
     function update() {
       vx *= 0.95;
@@ -143,8 +139,12 @@
       requestAnimationFrame(update);
     }
 
+    button.onclick = async function () {
+      await startCamera();
+      await enableMotion();
+    };
+
     update();
-    startCamera();
   </script>
 
 </body>
