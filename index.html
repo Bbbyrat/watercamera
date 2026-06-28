@@ -106,13 +106,15 @@
       let dx = t.clientX - window.innerWidth / 2;
       let dy = t.clientY - window.innerHeight / 2;
 
-      vx += dx * 0.0004;
-      vy += dy * 0.0004;
+      vx += dx * 0.0002;
+      vy += dy * 0.0002;
 
       debug.innerText =
-        "touch dx: " + dx.toFixed(1) +
-        "\ntouch dy: " + dy.toFixed(1);
-    });
+         "dx: " + dx.toFixed(1) +
+         "\ndy: " + dy.toFixed(1) +
+         "\nvx: " + vx.toFixed(3) +
+         "\nvy: " + vy.toFixed(3);
+         });
 
     function update() {
       vx *= 0.95;
@@ -126,8 +128,8 @@
 
       let speed = Math.sqrt(vx * vx + vy * vy);
 
-      let stretchX = 1 + speed * 0.03;
-      let stretchY = 1 - speed * 0.02;
+      let stretchX = 1 + vx * 0.01;
+      let stretchY = 1 + vy * 0.01;
 
       slime.style.transform = `
         translate(${x - 90}px, ${y - 90}px)
