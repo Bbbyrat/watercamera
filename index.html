@@ -48,8 +48,8 @@
     position: fixed;
      left: 0;
      top: 0;
-     width: 180px;
-     height: 180px;
+     width: 600px;
+     height: 600px;
    }
   </style>
 </head>
@@ -132,7 +132,7 @@
       let stretchY = 1 + vy * 0.01;
 
       slime.style.transform = `
-        translate(${x - 90}px, ${y - 90}px)
+        translate(${x - 300}px, ${y - 300}px)
         scale(${stretchX}, ${stretchY})
       `;
 
@@ -145,25 +145,30 @@
 
     update();
    
-    function makeBlob() {
-     const points = 6 + Math.floor(Math.random() * 3);
-     const step = (Math.PI * 2) / points;
+   function makeBlob() {
+  const points = 20; // ⭐增加点数（越多越圆）
+  const step = (Math.PI * 2) / points;
 
-     let path = "";
+  let path = "";
 
-     for (let i = 0; i < points; i++) {
-       let angle = i * step;
-       let r = 70 + Math.random() * 25;
+  for (let i = 0; i < points; i++) {
 
-       let x = 100 + Math.cos(angle) * r;
-       let y = 100 + Math.sin(angle) * r;
+    let angle = i * step;
 
-       path += (i === 0 ? "M" : "L") + x + " " + y + " ";
-     }
+    // 🧠 核心：让变化变“连续”
+    let noise = Math.sin(i * 0.8) * 8 + Math.random() * 4;
 
-     path += "Z";
-     return path;
-   }
+    let r = 80 + noise;
+
+    let x = 270 + Math.cos(angle) * r;
+    let y = 270 + Math.sin(angle) * r;
+
+    path += (i === 0 ? "M" : "L") + x + " " + y + " ";
+  }
+
+  path += "Z";
+  return path;
+}
 
     const blob = document.getElementById("blob");
 
