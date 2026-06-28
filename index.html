@@ -45,35 +45,15 @@
     }
 
     #slime {
-      position: fixed;
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-
-      background: radial-gradient(
-        circle at 30% 30%,
-        rgba(255, 255, 255, 0.9),
-        rgba(140, 210, 255, 0.75),
-        rgba(40, 120, 255, 0.6)
-      );
-
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-
-      box-shadow:
-        0 0 25px rgba(120, 200, 255, 0.4),
-        inset -10px -10px 20px rgba(0, 80, 200, 0.2);
-
-      mix-blend-mode: screen;
-
-      left: 0;
-      top: 0;
-
-      z-index: 9999;
-      opacity: 0.9;
-
-      transform-origin: center;
-    }
+  position: fixed;
+  width: 180px;
+  height: 180px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  filter: blur(0.5px);
+}
   </style>
 </head>
 
@@ -81,7 +61,20 @@
 
   <video id="video" autoplay playsinline></video>
 
-  <div id="slime"></div>
+  <svg id="slime" viewBox="0 0 200 200">
+  <path id="blob"
+    fill="url(#grad)"
+    d=""
+  />
+
+  <defs>
+    <radialGradient id="grad">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.9)" />
+      <stop offset="50%" stop-color="rgba(140,210,255,0.75)" />
+      <stop offset="100%" stop-color="rgba(40,120,255,0.6)" />
+    </radialGradient>
+  </defs>
+</svg>
 
   <div id="debug">touch to move slime</div>
 
@@ -153,6 +146,37 @@
     };
 
     update();
+   
+    function makeBlob() {
+     const points = 6 + Math.floor(Math.random() * 3);
+     const step = (Math.PI * 2) / points;
+
+     let path = "";
+
+     for (let i = 0; i < points; i++) {
+       let angle = i * step;
+       let r = 70 + Math.random() * 25;
+
+       let x = 100 + Math.cos(angle) * r;
+       let y = 100 + Math.sin(angle) * r;
+
+       path += (i === 0 ? "M" : "L") + x + " " + y + " ";
+     }
+
+     path += "Z";
+     return path;
+   }
+
+    const blob = document.getElementById("blob");
+
+    function initBlob() {
+      blob.setAttribute("d", makeBlob());
+    }
+
+    initBlob();
+    setInterval(() => {
+     blob.setAttribute("d", makeBlob());
+     }, 1200);
   </script>
 
 </body>
