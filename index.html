@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Camera Slime Touch</title>
+  <title>Slime Camera Clean Version</title>
 
   <style>
     body {
@@ -12,13 +12,26 @@
     }
 
     video {
+      display: none; /* 不直接显示，用canvas画 */
+    }
+
+    canvas {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      object-fit: cover;
       z-index: 0;
+    }
+
+    #slime {
+      position: fixed;
+      width: 220px;
+      height: 220px;
+      left: 0;
+      top: 0;
+      z-index: 10;
+      pointer-events: none;
     }
 
     button {
@@ -26,7 +39,7 @@
       bottom: 30px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 10;
+      z-index: 20;
       padding: 12px 20px;
       font-size: 16px;
     }
@@ -35,153 +48,150 @@
       position: fixed;
       top: 10px;
       left: 10px;
-      z-index: 99999;
+      z-index: 999;
       color: white;
       font-size: 14px;
       background: rgba(0,0,0,0.5);
-      padding: 8px;
+      padding: 6px 10px;
       border-radius: 6px;
       font-family: monospace;
     }
-
-   #slime {
-    position: fixed;
-     left: 0;
-     top: 0;
-     width: 900px;
-     height: 900px;
-   }
   </style>
 </head>
 
 <body>
 
-  <video id="video" autoplay playsinline></video>
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas"></canvas>
 
-  <svg id="slime" viewBox="0 0 200 200">
-  <path id="blob"
-    fill="url(#grad)"
-    d="M100 100"
-  />
+<div id="slime">
+<svg viewBox="0 0 200 200">
+  <path id="blob" fill="url(#grad)" d=""></path>
 
   <defs>
     <radialGradient id="grad">
-      <stop offset="0%" stop-color="rgba(255,255,255,0.9)" />
+      <stop offset="0%" stop-color="rgba(255,255,255,0.95)" />
       <stop offset="50%" stop-color="rgba(140,210,255,0.75)" />
       <stop offset="100%" stop-color="rgba(40,120,255,0.6)" />
     </radialGradient>
   </defs>
 </svg>
+</div>
 
-  <div id="debug">touch to move slime</div>
+<button id="btn">启动</button>
+<div id="debug">ready</div>
 
-  <button id="snap">启动</button>
-  <canvas id="canvas" style="display:none;"></canvas>
+<script>
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
-  <script>
-    const video = document.getElementById("video");
-    const button = document.getElementById("snap");
-    const slime = document.getElementById("slime");
-    const debug = document.getElementById("debug");
+const slime = document.getElementById("slime");
+const debug = document.getElementById("debug");
 
-    let x = window.innerWidth / 2;
-    let y = window.innerHeight / 2;
+let x = window.innerWidth / 2;
+let y = window.innerHeight / 2;
 
-    let vx = 0;
-    let vy = 0;
+let vx = 0;
+let vy = 0;
 
-    async function startCamera() {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-        audio: false
-      });
+let slimeScale = 1.8;
 
-      video.srcObject = stream;
-    }
+async function startCamera() {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "environment" },
+    audio: false
+  });
 
-  
-    window.addEventListener("touchmove", (e) => {
-      let t = e.touches[0];
+  video.srcObject = stream;
 
-      let dx = t.clientX - window.innerWidth / 2;
-      let dy = t.clientY - window.innerHeight / 2;
+  video.onloadedmetadata = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    draw();
+  };
+}
 
-      vx += dx * 0.0002;
-      vy += dy * 0.0002;
+function draw() {
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  requestAnimationFrame(draw);
+}
 
-      debug.innerText =
-         "dx: " + dx.toFixed(1) +
-         "\ndy: " + dy.toFixed(1) +
-         "\nvx: " + vx.toFixed(3) +
-         "\nvy: " + vy.toFixed(3);
-         });
+/* 🟢 touch 控制 */
+window.addEventListener("touchmove", (e) => {
+  let t = e.touches[0];
 
-    function update() {
-      vx *= 0.95;
-      vy *= 0.95;
+  let dx = t.clientX - window.innerWidth / 2;
+  let dy = t.clientY - window.innerHeight / 2;
 
-      x += vx;
-      y += vy;
+  vx += dx * 0.0003;
+  vy += dy * 0.0003;
+});
 
-      x = Math.max(80, Math.min(window.innerWidth - 80, x));
-      y = Math.max(80, Math.min(window.innerHeight - 80, y));
+/* 🟢 动画 */
+function update() {
 
-      let speed = Math.sqrt(vx * vx + vy * vy);
+  vx *= 0.92;
+  vy *= 0.92;
 
-      let stretchX = 1 + vx * 0.01;
-      let stretchY = 1 + vy * 0.01;
+  x += vx;
+  y += vy;
 
-      slime.style.transform = `
-        translate(${x - 450}px, ${y - 450}px)
-       
-        scale(${stretchX}, ${stretchY})
-      `;
+  x = Math.max(100, Math.min(window.innerWidth - 100, x));
+  y = Math.max(100, Math.min(window.innerHeight - 100, y));
 
-      requestAnimationFrame(update);
-    }
+  let speed = Math.sqrt(vx*vx + vy*vy);
 
-    button.onclick = async function () {
-      await startCamera();
-    };
+  let stretchX = 1 + vx * 0.01;
+  let stretchY = 1 + vy * 0.01;
 
-    update();
-   
-   function makeBlob() {
-  const points = 20; // ⭐增加点数（越多越圆）
-  const step = (Math.PI * 2) / points;
+  slime.style.transform = `
+    translate(${x - 110}px, ${y - 110}px)
+    scale(${slimeScale})
+    scale(${stretchX}, ${stretchY})
+  `;
+
+  debug.innerText =
+    "speed: " + speed.toFixed(3);
+
+  requestAnimationFrame(update);
+}
+
+/* 🟢 史莱姆形状 */
+function makeBlob() {
+  const points = 18;
+  const step = Math.PI * 2 / points;
 
   let path = "";
 
   for (let i = 0; i < points; i++) {
-
     let angle = i * step;
+    let noise = Math.sin(i * 0.8) * 6 + Math.random() * 3;
+    let r = 70 + noise;
 
-    // 🧠 核心：让变化变“连续”
-    let noise = Math.sin(i * 0.8) * 8 + Math.random() * 4;
+    let px = 100 + Math.cos(angle) * r;
+    let py = 100 + Math.sin(angle) * r;
 
-    let r = 80 + noise;
-
-    let x = 100 + Math.cos(angle) * r;
-    let y = 100 + Math.sin(angle) * r;
-
-    path += (i === 0 ? "M" : "L") + x + " " + y + " ";
+    path += (i === 0 ? "M" : "L") + px + " " + py + " ";
   }
 
   path += "Z";
   return path;
 }
 
-    const blob = document.getElementById("blob");
+function animateBlob() {
+  document.getElementById("blob")
+    .setAttribute("d", makeBlob());
 
-    function initBlob() {
-      blob.setAttribute("d", makeBlob());
-    }
+  requestAnimationFrame(animateBlob);
+}
 
-    initBlob();
-    setInterval(() => {
-     blob.setAttribute("d", makeBlob());
-     }, 1200);
-  </script>
+document.getElementById("btn").onclick = () => {
+  startCamera();
+  update();
+  animateBlob();
+};
+</script>
 
 </body>
 </html>
