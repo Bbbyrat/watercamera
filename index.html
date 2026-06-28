@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Camera Slime</title>
+  <title>Camera Slime Debug</title>
 
   <style>
     body {
@@ -29,6 +29,20 @@
       z-index: 10;
       padding: 12px 20px;
       font-size: 16px;
+    }
+
+    /* 🧠 调试面板 */
+    #debug {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 99999;
+      color: white;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      padding: 8px;
+      border-radius: 6px;
+      font-family: monospace;
     }
 
     #slime {
@@ -70,16 +84,17 @@
 
   <div id="slime"></div>
 
-  <button id="snap">启动 + 拍照</button>
+  <!-- 🧠 调试显示 -->
+  <div id="debug">waiting...</div>
+
+  <button id="snap">启动</button>
   <canvas id="canvas" style="display:none;"></canvas>
 
   <script>
     const video = document.getElementById("video");
     const button = document.getElementById("snap");
-    const canvas = document.getElementById("canvas");
-    const context = canvas.getContext("2d");
-
     const slime = document.getElementById("slime");
+    const debug = document.getElementById("debug");
 
     let x = window.innerWidth / 2;
     let y = window.innerHeight / 2;
@@ -88,7 +103,6 @@
     let vy = 0;
 
     async function startCamera() {
-      
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
         audio: false
@@ -98,11 +112,12 @@
     }
 
     async function enableMotion() {
+
+      // iOS权限
       if (typeof DeviceOrientationEvent !== "undefined" &&
           typeof DeviceOrientationEvent.requestPermission === "function") {
 
         const permission = await DeviceOrientationEvent.requestPermission();
-
         if (permission !== "granted") {
           alert("没有陀螺仪权限");
           return;
@@ -110,12 +125,17 @@
       }
 
       window.addEventListener("deviceorientation", (event) => {
+
         let gamma = event.gamma || 0;
         let beta = event.beta || 0;
 
-        vx += gamma * 0.05;
-        vy += beta * 0.05;
-        console.log("motion:", event.gamma, event.beta);
+        // 🧠 显示调试数据（关键！）
+        debug.innerText =
+          "gamma: " + gamma.toFixed(2) +
+          "\nbeta: " + beta.toFixed(2);
+
+        vx += gamma * 0.08;
+        vy += beta * 0.08;
       });
     }
 
@@ -125,6 +145,9 @@
 
       x += vx;
       y += vy;
+
+      x = Math.max(60, Math.min(window.innerWidth - 60, x));
+      y = Math.max(60, Math.min(window.innerHeight - 60, y));
 
       let speed = Math.sqrt(vx * vx + vy * vy);
 
