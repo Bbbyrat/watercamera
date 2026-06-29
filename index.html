@@ -125,6 +125,30 @@ function createSlimes() {
   template.remove();
 }
 
+  window.addEventListener("touchstart", (e) => {
+
+  let t = e.touches[0];
+
+  for (let s of slimes) {
+
+    let dx = t.clientX - s.x;
+    let dy = t.clientY - s.y;
+
+    let dist = Math.sqrt(dx * dx + dy * dy);
+
+    // 点击范围（可以调大/调小）
+    if (dist < 120) {
+
+      // 先取消全部选中
+      for (let ss of slimes) ss.selected = false;
+
+      // 选中当前
+      s.selected = true;
+      break;
+    }
+  }
+});
+
 /* touch控制 */
 window.addEventListener("touchmove", (e) => {
 
@@ -135,8 +159,12 @@ window.addEventListener("touchmove", (e) => {
   let dx = t.clientX - window.innerWidth / 2;
   let dy = t.clientY - window.innerHeight / 2;
 
-  slimes[0].vx += dx * 0.0007;
-  slimes[0].vy += dy * 0.0007;
+  for (let s of slimes) {
+
+    if (!s.selected) continue;
+
+  s.vx += dx * 0.0007;
+  s.vy += dy * 0.0007;
 });
 
 /* blob */
