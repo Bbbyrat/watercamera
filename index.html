@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8" />
-<title>Slime Field System</title>
+<title>Slime Base System</title>
 
 <style>
 body {
@@ -11,32 +11,11 @@ body {
   background: black;
 }
 
-/* 🎥 摄像头 */
 video {
   position: fixed;
   width: 100vw;
   height: 100vh;
   object-fit: cover;
-
-  filter:
-    contrast(1.2)
-    saturate(1.4)
-    hue-rotate(165deg)
-    brightness(0.85);
-}
-
-/* 🌫️ 氛围层 */
-#overlay {
-  position: fixed;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  background: radial-gradient(
-    circle at center,
-    rgba(120, 255, 240, 0.10),
-    rgba(0, 30, 80, 0.55)
-  );
-  mix-blend-mode: screen;
 }
 
 #container {
@@ -59,8 +38,8 @@ button {
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
+  padding: 10px 16px;
   z-index: 10;
-  padding: 10px 18px;
 }
 
 #debug {
@@ -70,8 +49,6 @@ button {
   color: white;
   font-family: monospace;
   font-size: 12px;
-  background: rgba(0,0,0,0.5);
-  padding: 6px;
 }
 </style>
 </head>
@@ -79,25 +56,16 @@ button {
 <body>
 
 <video id="video" autoplay playsinline></video>
-<div id="overlay"></div>
 <div id="container"></div>
 
 <!-- 模板 -->
 <div id="template" class="slime">
 <svg viewBox="0 0 200 200">
-  <path class="blob" fill="url(#grad)"></path>
-
-  <defs>
-    <radialGradient id="grad">
-      <stop offset="0%" stop-color="rgba(180,255,255,0.95)" />
-      <stop offset="40%" stop-color="rgba(80,180,255,0.75)" />
-      <stop offset="100%" stop-color="rgba(0,90,255,0.25)" />
-    </radialGradient>
-  </defs>
+  <path class="blob" fill="rgba(100,180,255,0.8)"></path>
 </svg>
 </div>
 
-<button id="btn">START</button>
+<button id="btn">启动</button>
 <div id="debug">ready</div>
 
 <script>
@@ -119,13 +87,12 @@ async function startCamera() {
   video.srcObject = stream;
 }
 
-/* 🌊 创建5个史莱姆 */
+/* 创建3个 */
 function createSlimes() {
 
-  const sizes = [3.4, 3.0, 2.6, 2.3, 2.0];
   const template = document.getElementById("template");
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 3; i++) {
 
     let node = template.cloneNode(true);
     node.removeAttribute("id");
@@ -135,51 +102,38 @@ function createSlimes() {
       el: node,
       blob: node.querySelector(".blob"),
 
-      x: window.innerWidth * (0.2 + Math.random() * 0.6),
-      y: window.innerHeight * (0.2 + Math.random() * 0.6),
+      x: window.innerWidth * (0.3 + i * 0.2),
+      y: window.innerHeight * 0.5,
 
-      vx: (Math.random() - 0.5) * 2,
-      vy: (Math.random() - 0.5) * 2,
-
-      scale: sizes[i],
-
-      speed: 0.8 + Math.random() * 1.2,
-      damping: 0.92 + Math.random() * 0.05,
-      noise: 0.02 + Math.random() * 0.05
+      vx: 0,
+      vy: 0
     });
-  }
-
-  // 初始化 blob（关键）
-  for (let s of slimes) {
-    s.blob.setAttribute("d", makeBlob(performance.now(), 0));
   }
 
   template.remove();
 }
 
-/* 🌬️ 风场控制 */
+/* touch 风力 */
 window.addEventListener("touchmove", (e) => {
 
+  if (!slimes[0]) return;
+
   let t = e.touches[0];
-  let force = 0.00035;
 
   for (let s of slimes) {
 
     let dx = t.clientX - s.x;
     let dy = t.clientY - s.y;
 
-    let dist = Math.sqrt(dx*dx + dy*dy) + 0.001;
-    let f = force / dist * 80;
-
-    s.vx += dx * f;
-    s.vy += dy * f;
+    s.vx += dx * 0.0005;
+    s.vy += dy * 0.0005;
   }
 });
 
-/* 🌊 blob */
-function makeBlob(time, offset = 0) {
+/* blob */
+function makeBlob(time) {
 
-  const points = 20;
+  const points = 18;
   const step = Math.PI * 2 / points;
 
   let path = "";
@@ -189,8 +143,8 @@ function makeBlob(time, offset = 0) {
     let a = i * step;
 
     let wave =
-      Math.sin(i * 0.8 + time * 0.002 + offset) * 7 +
-      Math.sin(i * 1.7 - time * 0.0015 + offset) * 5;
+      Math.sin(i * 0.8 + time * 0.002) * 6 +
+      Math.sin(i * 1.7 - time * 0.0015) * 4;
 
     let r = 80 + wave;
 
@@ -203,7 +157,7 @@ function makeBlob(time, offset = 0) {
   return path + "Z";
 }
 
-/* 🧠 主循环 */
+/* 更新 */
 function update() {
 
   if (!running) {
@@ -213,62 +167,23 @@ function update() {
 
   for (let s of slimes) {
 
-    s.vx *= s.damping;
-    s.vy *= s.damping;
-
-    s.vx += (Math.random() - 0.5) * s.noise;
-    s.vy += (Math.random() - 0.5) * s.noise;
+    s.vx *= 0.95;
+    s.vy *= 0.95;
 
     s.x += s.vx;
     s.y += s.vy;
-  }
-
-  /* 碰撞 */
-  for (let i = 0; i < slimes.length; i++) {
-    for (let j = i + 1; j < slimes.length; j++) {
-
-      let a = slimes[i];
-      let b = slimes[j];
-
-      let dx = b.x - a.x;
-      let dy = b.y - a.y;
-
-      let dist = Math.sqrt(dx*dx + dy*dy) || 0.001;
-      let minDist = 140;
-
-      if (dist < minDist) {
-
-        let force = (minDist - dist) * 0.015;
-
-        let nx = dx / dist;
-        let ny = dy / dist;
-
-        a.vx -= nx * force;
-        a.vy -= ny * force;
-
-        b.vx += nx * force;
-        b.vy += ny * force;
-      }
-    }
-  }
-
-  /* 渲染 */
-  for (let s of slimes) {
 
     s.x = Math.max(80, Math.min(window.innerWidth - 80, s.x));
     s.y = Math.max(80, Math.min(window.innerHeight - 80, s.y));
 
     let angle = Math.atan2(s.vy, s.vx);
 
-    let stretchX = 1 + s.vx * 0.02;
-    let stretchY = 1 - s.vy * 0.02;
-
     s.el.style.transform =
       `translate(${s.x - 110}px, ${s.y - 110}px)
        rotate(${angle}rad)
-       scale(${s.scale * stretchX}, ${s.scale * stretchY})`;
+       scale(2.5)`;
 
-    s.blob.setAttribute("d", makeBlob(performance.now(), s.scale));
+    s.blob.setAttribute("d", makeBlob(performance.now()));
   }
 
   debug.innerText = `slimes: ${slimes.length}`;
