@@ -97,7 +97,7 @@ button {
 </svg>
 </div>
 
-<button id="btn">启动</button>
+<button id="btn">TAP ME</button>
 <div id="debug">ready</div>
 
 <script>
@@ -149,35 +149,21 @@ function createSlimes() {
   template.remove();
 }
 
-/* 🟢 touch控制（只控制最大） */
+/* 🟢 touch控制 */
 window.addEventListener("touchmove", (e) => {
 
-  if (!slimes[0]) return;
-
   let t = e.touches[0];
 
-  let dx = t.clientX - window.innerWidth / 2;
-  let dy = t.clientY - window.innerHeight / 2;
+  let force = 0.0003;
 
-  window.addEventListener("touchmove", (e) => {
-
-  if (!slimes.length) return;
-
-  let t = e.touches[0];
-
-  let dx = t.clientX - window.innerWidth / 2;
-  let dy = t.clientY - window.innerHeight / 2;
-
-  // 🟢 群体统一“风场推动”
   for (let s of slimes) {
-    s.vx += dx * 0.00025;
-    s.vy += dy * 0.00025;
-  }
 
-  // 🟢 再加一点“主控增强”（让最大那个更灵敏）
-  slimes[0].vx += dx * 0.0002;
-  slimes[0].vy += dy * 0.0002;
-});
+    let dx2 = t.clientX - s.x;
+    let dy2 = t.clientY - s.y;
+
+    s.vx += dx2 * force;
+    s.vy += dy2 * force;
+  }
 });
 
 /* 🟢 blob */
