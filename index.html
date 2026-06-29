@@ -17,6 +17,29 @@ video {
   height: 100vh;
   object-fit: cover;
   z-index: 0;
+  filter: 
+    hue-rotate(190deg)
+    saturate(1.4)
+    contrast(1.05)
+    brightness(0.9);
+}
+
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 1;
+
+  background: radial-gradient(
+    circle at center,
+    rgba(120, 220, 255, 0.08),
+    rgba(0, 40, 90, 0.35)
+  );
+
+  mix-blend-mode: screen;
 }
 
 #container {
@@ -61,6 +84,7 @@ button {
 <video id="video" autoplay playsinline></video>
 
 <div id="container"></div>
+<div id="overlay"></div>
 
 <!-- 🟢模板（只用来clone） -->
 <div id="template" class="slime">
