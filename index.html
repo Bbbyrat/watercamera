@@ -10,21 +10,11 @@ body {
   overflow: hidden;
   background: black;
 }
- #frame {
-  position: fixed;
-  width: 75vw;
-  height: 75vh;
-  left: 50%;
-  top: 38%;
-  transform: translate(-50%, -50%);
-  z-index: 0;
+
 video {
   position: fixed;
-  width: 70vw;
-  height: 70vh;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  width: 100vw;
+  height: 100vh;
   object-fit: cover;
   z-index: 0;
 }
@@ -63,37 +53,13 @@ button {
   background: rgba(0,0,0,0.5);
   padding: 6px;
 }
- 
-
-  /* 外发光边框感 */
-  background: linear-gradient(
-    to bottom,
-    rgba(120, 220, 255, 0.9),
-    rgba(0, 120, 255, 0.4)
-  );
-
-  padding: 6px;
-  box-sizing: border-box;
-
-  filter: drop-shadow(0 0 20px rgba(100, 200, 255, 0.4));
-}
 </style>
 </head>
 
 <body>
 
-<div id="frame">
-
-  <video id="video" autoplay playsinline></video>
-
-  <div id="container"></div>
-
-</div>
-
-<div id="border"></div>
-
-<button id="btn">启动</button>
-<div id="debug">ready</div>
+<video id="video" autoplay playsinline></video>
+<div id="container"></div>
 
 <!-- 模板 -->
 <div id="template" class="slime">
@@ -109,8 +75,6 @@ button {
   </defs>
 </svg>
 </div>
-
-</body>
 
 <button id="btn">启动</button>
 
@@ -161,30 +125,6 @@ function createSlimes() {
   template.remove();
 }
 
-  window.addEventListener("touchstart", (e) => {
-
-  let t = e.touches[0];
-
-  for (let s of slimes) {
-
-    let dx = t.clientX - s.x;
-    let dy = t.clientY - s.y;
-
-    let dist = Math.sqrt(dx * dx + dy * dy);
-
-    // 点击范围（可以调大/调小）
-    if (dist < 120) {
-
-      // 先取消全部选中
-      for (let ss of slimes) ss.selected = false;
-
-      // 选中当前
-      s.selected = true;
-      break;
-    }
-  }
-});
-
 /* touch控制 */
 window.addEventListener("touchmove", (e) => {
 
@@ -195,12 +135,8 @@ window.addEventListener("touchmove", (e) => {
   let dx = t.clientX - window.innerWidth / 2;
   let dy = t.clientY - window.innerHeight / 2;
 
-  for (let s of slimes) {
-
-    if (!s.selected) continue;
-
-  s.vx += dx * 0.0007;
-  s.vy += dy * 0.0007;
+  slimes[0].vx += dx * 0.0007;
+  slimes[0].vy += dy * 0.0007;
 });
 
 /* blob */
