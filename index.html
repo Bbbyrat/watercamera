@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8" />
-<title>Slime Base System</title>
+<title>Stable Slime System</title>
 
 <style>
 body {
@@ -16,6 +16,7 @@ video {
   width: 100vw;
   height: 100vh;
   object-fit: cover;
+  z-index: 0;
 }
 
 #container {
@@ -38,8 +39,8 @@ button {
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 10px 16px;
   z-index: 10;
+  padding: 10px 18px;
 }
 
 #debug {
@@ -49,6 +50,8 @@ button {
   color: white;
   font-family: monospace;
   font-size: 12px;
+  background: rgba(0,0,0,0.5);
+  padding: 6px;
 }
 </style>
 </head>
@@ -61,18 +64,24 @@ button {
 <!-- 模板 -->
 <div id="template" class="slime">
 <svg viewBox="0 0 200 200">
-  <path class="blob" fill="rgba(100,180,255,0.8)"></path>
+  <path class="blob" fill="url(#grad)"></path>
+
+  <defs>
+    <radialGradient id="grad">
+      <stop offset="0%" stop-color="rgba(180,230,255,0.95)" />
+      <stop offset="40%" stop-color="rgba(80,170,255,0.8)" />
+      <stop offset="100%" stop-color="rgba(0,90,255,0.35)" />
+    </radialGradient>
+  </defs>
 </svg>
 </div>
 
 <button id="btn">启动</button>
-<div id="debug">ready</div>
 
 <script>
 
 const video = document.getElementById("video");
 const container = document.getElementById("container");
-const debug = document.getElementById("debug");
 
 let slimes = [];
 let running = false;
@@ -87,9 +96,10 @@ async function startCamera() {
   video.srcObject = stream;
 }
 
-/* 创建3个 */
+/* 创建史莱姆 */
 function createSlimes() {
 
+  const sizes = [3.2, 2.2, 1.4];
   const template = document.getElementById("template");
 
   for (let i = 0; i < 3; i++) {
@@ -106,34 +116,33 @@ function createSlimes() {
       y: window.innerHeight * 0.5,
 
       vx: 0,
-      vy: 0
+      vy: 0,
+
+      scale: sizes[i]
     });
   }
 
   template.remove();
 }
 
-/* touch 风力 */
+/* touch控制 */
 window.addEventListener("touchmove", (e) => {
 
   if (!slimes[0]) return;
 
   let t = e.touches[0];
 
-  for (let s of slimes) {
+  let dx = t.clientX - window.innerWidth / 2;
+  let dy = t.clientY - window.innerHeight / 2;
 
-    let dx = t.clientX - s.x;
-    let dy = t.clientY - s.y;
-
-    s.vx += dx * 0.0005;
-    s.vy += dy * 0.0005;
-  }
+  slimes[0].vx += dx * 0.0007;
+  slimes[0].vy += dy * 0.0007;
 });
 
 /* blob */
-function makeBlob(time) {
+function makeBlob(time, offset = 0) {
 
-  const points = 18;
+  const points = 20;
   const step = Math.PI * 2 / points;
 
   let path = "";
@@ -143,8 +152,8 @@ function makeBlob(time) {
     let a = i * step;
 
     let wave =
-      Math.sin(i * 0.8 + time * 0.002) * 6 +
-      Math.sin(i * 1.7 - time * 0.0015) * 4;
+      Math.sin(i * 0.8 + time * 0.002 + offset) * 6 +
+      Math.sin(i * 1.7 - time * 0.0015 + offset) * 4;
 
     let r = 80 + wave;
 
@@ -157,13 +166,10 @@ function makeBlob(time) {
   return path + "Z";
 }
 
-/* 更新 */
+/* update */
 function update() {
 
-  if (!running) {
-    requestAnimationFrame(update);
-    return;
-  }
+  if (!running) return;
 
   for (let s of slimes) {
 
@@ -172,34 +178,64 @@ function update() {
 
     s.x += s.vx;
     s.y += s.vy;
+  }
+
+  /* 碰撞 */
+  for (let i = 0; i < slimes.length; i++) {
+    for (let j = i + 1; j < slimes.length; j++) {
+
+      let a = slimes[i];
+      let b = slimes[j];
+
+      let dx = b.x - a.x;
+      let dy = b.y - a.y;
+
+      let dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
+      let minDist = 150;
+
+      if (dist < minDist) {
+
+        let force = (minDist - dist) * 0.02;
+
+        let nx = dx / dist;
+        let ny = dy / dist;
+
+        a.vx -= nx * force;
+        a.vy -= ny * force;
+
+        b.vx += nx * force;
+        b.vy += ny * force;
+      }
+    }
+  }
+
+  /* 渲染 */
+  for (let s of slimes) {
 
     s.x = Math.max(80, Math.min(window.innerWidth - 80, s.x));
     s.y = Math.max(80, Math.min(window.innerHeight - 80, s.y));
 
     let angle = Math.atan2(s.vy, s.vx);
 
+    let stretchX = 1 + s.vx * 0.02;
+    let stretchY = 1 - s.vy * 0.02;
+
     s.el.style.transform =
       `translate(${s.x - 110}px, ${s.y - 110}px)
        rotate(${angle}rad)
-       scale(2.5)`;
+       scale(${s.scale * stretchX}, ${s.scale * stretchY})`;
 
-    s.blob.setAttribute("d", makeBlob(performance.now()));
+    s.blob.setAttribute("d", makeBlob(performance.now(), s.scale));
   }
-
-  debug.innerText = `slimes: ${slimes.length}`;
 
   requestAnimationFrame(update);
 }
 
 /* 启动 */
 document.getElementById("btn").onclick = async () => {
-
   await startCamera();
-
   createSlimes();
-
   running = true;
-
   update();
 };
 
