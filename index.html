@@ -13,8 +13,11 @@ body {
 
 video {
   position: fixed;
-  width: 100vw;
-  height: 100vh;
+  width: 70vw;
+  height: 70vh;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   object-fit: cover;
   z-index: 0;
 }
@@ -53,12 +56,44 @@ button {
   background: rgba(0,0,0,0.5);
   padding: 6px;
 }
+  #frame {
+  position: fixed;
+  width: 75vw;
+  height: 75vh;
+  left: 50%;
+  top: 38%;
+  transform: translate(-50%, -50%);
+
+  /* 上窄下宽（梯形感） */
+  clip-path: polygon(
+    20% 0%,
+    80% 0%,
+    100% 100%,
+    0% 100%
+  );
+
+  z-index: 0;
+
+  /* 外发光边框感 */
+  background: linear-gradient(
+    to bottom,
+    rgba(120, 220, 255, 0.9),
+    rgba(0, 120, 255, 0.4)
+  );
+
+  padding: 6px;
+  box-sizing: border-box;
+
+  filter: drop-shadow(0 0 20px rgba(100, 200, 255, 0.4));
+}
 </style>
 </head>
 
 <body>
 
-<video id="video" autoplay playsinline></video>
+<div id="frame">
+  <video id="video" autoplay playsinline></video>
+</div>
 <div id="container"></div>
 
 <!-- 模板 -->
