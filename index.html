@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8" />
-<title>Camera Slime Touch</title>
+<title>Stable Slime System</title>
 
 <style>
 body {
@@ -13,43 +13,45 @@ body {
 
 video {
   position: fixed;
-  top: 0;
-  left: 0;
   width: 100vw;
   height: 100vh;
   object-fit: cover;
   z-index: 0;
 }
 
+#container {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+.slime {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  left: 0;
+  top: 0;
+}
+
 button {
   position: fixed;
-  bottom: 30px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
-  padding: 12px 20px;
-  font-size: 16px;
+  padding: 10px 18px;
 }
 
 #debug {
   position: fixed;
   top: 10px;
   left: 10px;
-  z-index: 99999;
   color: white;
-  font-size: 14px;
-  background: rgba(0,0,0,0.5);
-  padding: 8px;
-  border-radius: 6px;
   font-family: monospace;
-}
-
-#slime {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 220px;
-  height: 220px;
+  font-size: 12px;
+  background: rgba(0,0,0,0.5);
+  padding: 6px;
 }
 </style>
 </head>
@@ -58,32 +60,35 @@ button {
 
 <video id="video" autoplay playsinline></video>
 
-<svg id="slime" viewBox="0 0 200 200">
-  <path id="blob" fill="url(#grad)" d="" />
+<div id="container"></div>
+
+<!-- 🟢模板（只用来clone） -->
+<div id="template" class="slime">
+<svg viewBox="0 0 200 200">
+  <path class="blob" fill="url(#grad)"></path>
 
   <defs>
     <radialGradient id="grad">
-      <stop offset="0%" stop-color="rgba(255,255,255,0.9)" />
-      <stop offset="50%" stop-color="rgba(140,210,255,0.75)" />
-      <stop offset="100%" stop-color="rgba(40,120,255,0.6)" />
+      <stop offset="0%" stop-color="rgba(255,255,255,0.8)" />
+      <stop offset="100%" stop-color="rgba(40,120,255,0.3)" />
     </radialGradient>
   </defs>
 </svg>
+</div>
 
-<div id="debug">touch to move slime</div>
-<button id="snap">启动</button>
+<button id="btn">启动</button>
+<div id="debug">ready</div>
 
 <script>
 
 const video = document.getElementById("video");
-const button = document.getElementById("snap");
+const container = document.getElementById("container");
 const debug = document.getElementById("debug");
 
 let slimes = [];
+let running = false;
 
-let baseScale = 3.2;
-
-/* 摄像头 */
+/* 🟢 摄像头 */
 async function startCamera() {
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: "environment" },
@@ -92,19 +97,23 @@ async function startCamera() {
 
   video.srcObject = stream;
 }
-  /* 🟢 创建3个史莱姆（核心改造点） */
+
+/* 🟢 创建3个史莱姆（稳定版） */
 function createSlimes() {
 
   const sizes = [3.2, 2.2, 1.4];
 
+  const template = document.getElementById("template");
+
   for (let i = 0; i < 3; i++) {
 
-    let node = document.getElementById("slime").cloneNode(true);
+    let node = template.cloneNode(true);
     node.removeAttribute("id");
-    document.body.appendChild(node);
+    container.appendChild(node);
 
     slimes.push({
       el: node,
+      blob: node.querySelector(".blob"),
 
       x: window.innerWidth * (0.3 + i * 0.2),
       y: window.innerHeight * 0.5,
@@ -116,31 +125,56 @@ function createSlimes() {
     });
   }
 
-  // 删除模板
-  document.getElementById("slime").remove();
+  template.remove();
 }
 
-
-/* touch */
+/* 🟢 touch控制（只控制最大） */
 window.addEventListener("touchmove", (e) => {
+
+  if (!slimes[0]) return;
+
   let t = e.touches[0];
 
   let dx = t.clientX - window.innerWidth / 2;
   let dy = t.clientY - window.innerHeight / 2;
 
-  slimes[0].vx += dx * 0.0006;
-  slimes[0].vy += dy * 0.0006;
-  
-  debug.innerText =
-    "dx: " + dx.toFixed(1) +
-    "\ndy: " + dy.toFixed(1) +
-    "\nvx: " + slimes[0].vx.toFixed(3) +
-    "\nvy: " + slimes[0].vy.toFixed(3);
+  slimes[0].vx += dx * 0.0007;
+  slimes[0].vy += dy * 0.0007;
 });
 
-/* 🟢 主更新（多体系统） */
+/* 🟢 blob */
+function makeBlob(time, offset = 0) {
+
+  const points = 20;
+  const step = Math.PI * 2 / points;
+
+  let path = "";
+
+  for (let i = 0; i < points; i++) {
+
+    let a = i * step;
+
+    let wave =
+      Math.sin(i * 0.8 + time * 0.002 + offset) * 6 +
+      Math.sin(i * 1.7 - time * 0.0015 + offset) * 4;
+
+    let r = 80 + wave;
+
+    let x = 100 + Math.cos(a) * r;
+    let y = 100 + Math.sin(a) * r;
+
+    path += (i === 0 ? "M" : "L") + x + " " + y + " ";
+  }
+
+  return path + "Z";
+}
+
+/* 🟢 update（稳定物理） */
 function update() {
 
+  if (!running) return;
+
+  // move
   for (let s of slimes) {
 
     s.vx *= 0.95;
@@ -150,7 +184,7 @@ function update() {
     s.y += s.vy;
   }
 
-  /* 🟢 碰撞系统 */
+  // collision
   for (let i = 0; i < slimes.length; i++) {
     for (let j = i + 1; j < slimes.length; j++) {
 
@@ -160,7 +194,7 @@ function update() {
       let dx = b.x - a.x;
       let dy = b.y - a.y;
 
-      let dist = Math.sqrt(dx * dx + dy * dy);
+      let dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
       let minDist = 150;
 
       if (dist < minDist) {
@@ -179,15 +213,13 @@ function update() {
     }
   }
 
-  /* 🟢 渲染 */
+  // render
   for (let s of slimes) {
 
     s.x = Math.max(80, Math.min(window.innerWidth - 80, s.x));
     s.y = Math.max(80, Math.min(window.innerHeight - 80, s.y));
 
     let angle = Math.atan2(s.vy, s.vx);
-
-    let speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
 
     let stretchX = 1 + s.vx * 0.02;
     let stretchY = 1 - s.vy * 0.02;
@@ -196,55 +228,23 @@ function update() {
       `translate(${s.x - 110}px, ${s.y - 110}px)
        rotate(${angle}rad)
        scale(${s.scale * stretchX}, ${s.scale * stretchY})`;
+
+    s.blob.setAttribute("d", makeBlob(performance.now(), s.scale));
   }
 
   requestAnimationFrame(update);
 }
 
-/* 🟢 blob动画（保留你的原逻辑，但给每个都动） */
-function animateBlob(time) {
+/* 🟢 启动 */
+document.getElementById("btn").onclick = async () => {
 
-  let blobs = document.querySelectorAll("#blob");
-
-  blobs.forEach((blob, i) => {
-
-    blob.setAttribute("d", makeBlob(time + i * 1000));
-  });
-
-  requestAnimationFrame(animateBlob);
-}
-  /* 🟢 blob生成 */
-function makeBlob(time) {
-
-  const points = 20;
-  const step = Math.PI * 2 / points;
-
-  let path = "";
-
-  for (let i = 0; i < points; i++) {
-
-    let angle = i * step;
-
-    let wave =
-      Math.sin(i * 0.8 + time * 0.002) * 6 +
-      Math.sin(i * 1.7 - time * 0.0015) * 4;
-
-    let r = 80 + wave;
-
-    let px = 100 + Math.cos(angle) * r;
-    let py = 100 + Math.sin(angle) * r;
-
-    path += (i === 0 ? "M" : "L") + px + " " + py + " ";
-  }
-
-  return path + "Z";
-}
-
-/* 启动 */
-button.onclick = async function () {
   await startCamera();
+
+  createSlimes();
+
+  running = true;
+
   update();
-  animateBlob(0);
 };
 
 </script>
