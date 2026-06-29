@@ -100,6 +100,7 @@ function createSlimes() {
   for (let i = 0; i < 3; i++) {
 
     let node = document.getElementById("slime").cloneNode(true);
+    node.removeAttribute("id");
     document.body.appendChild(node);
 
     slimes.push({
@@ -127,9 +128,9 @@ window.addEventListener("touchmove", (e) => {
   let dx = t.clientX - window.innerWidth / 2;
   let dy = t.clientY - window.innerHeight / 2;
 
-  vx += dx * 0.0006;
-  vy += dy * 0.0006;
-
+  slimes[0].vx += dx * 0.0006;
+  slimes[0].vy += dy * 0.0006;
+  
   debug.innerText =
     "dx: " + dx.toFixed(1) +
     "\ndy: " + dy.toFixed(1) +
