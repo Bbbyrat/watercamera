@@ -159,8 +159,25 @@ window.addEventListener("touchmove", (e) => {
   let dx = t.clientX - window.innerWidth / 2;
   let dy = t.clientY - window.innerHeight / 2;
 
-  slimes[0].vx += dx * 0.0007;
-  slimes[0].vy += dy * 0.0007;
+  window.addEventListener("touchmove", (e) => {
+
+  if (!slimes.length) return;
+
+  let t = e.touches[0];
+
+  let dx = t.clientX - window.innerWidth / 2;
+  let dy = t.clientY - window.innerHeight / 2;
+
+  // 🟢 群体统一“风场推动”
+  for (let s of slimes) {
+    s.vx += dx * 0.00025;
+    s.vy += dy * 0.00025;
+  }
+
+  // 🟢 再加一点“主控增强”（让最大那个更灵敏）
+  slimes[0].vx += dx * 0.0002;
+  slimes[0].vy += dy * 0.0002;
+});
 });
 
 /* 🟢 blob */
