@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8" />
-<title>Stable Slime System</title>
+<title>Stable Slime System - Dream Version</title>
 
 <style>
 body {
@@ -11,30 +11,30 @@ body {
   background: black;
 }
 
+/* 🎥 摄像头 */
 video {
   position: fixed;
   width: 100vw;
   height: 100vh;
   object-fit: cover;
-  z-index: 0;
-  
+  filter: 
+    contrast(1.15)
+    saturate(1.4)
+    hue-rotate(170deg)
+    brightness(0.85);
 }
 
+/* 🌫️ 梦核蓝绿雾 */
 #overlay {
   position: fixed;
-  top: 0;
-  left: 0;
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 1;
-
   background: radial-gradient(
     circle at center,
-    rgba(120, 220, 255, 0.08),
-    rgba(0, 40, 90, 0.35)
+    rgba(120, 255, 240, 0.10),
+    rgba(0, 30, 80, 0.55)
   );
-
   mix-blend-mode: screen;
 }
 
@@ -51,6 +51,7 @@ video {
   height: 220px;
   left: 0;
   top: 0;
+  opacity: 0.95;
 }
 
 button {
@@ -78,51 +79,48 @@ button {
 <body>
 
 <video id="video" autoplay playsinline></video>
-
-<div id="container"></div>
 <div id="overlay"></div>
+<div id="container"></div>
 
-<!-- 🟢模板（只用来clone） -->
+<!-- 模板 -->
 <div id="template" class="slime">
 <svg viewBox="0 0 200 200">
   <path class="blob" fill="url(#grad)"></path>
 
   <defs>
     <radialGradient id="grad">
-      <stop offset="0%" stop-color="rgba(180,230,255,0.95)" />
-      <stop offset="40%" stop-color="rgba(80,170,255,0.8)" />
-      <stop offset="100%" stop-color="rgba(0,90,255,0.35)" />
+      <stop offset="0%" stop-color="rgba(180,255,255,0.95)" />
+      <stop offset="40%" stop-color="rgba(80,180,255,0.75)" />
+      <stop offset="100%" stop-color="rgba(0,90,255,0.25)" />
     </radialGradient>
   </defs>
 </svg>
 </div>
 
-<button id="btn">TAP ME</button>
+<button id="btn">START</button>
 <div id="debug">ready</div>
 
 <script>
 
 const video = document.getElementById("video");
 const container = document.getElementById("container");
-const debug = document.getElementById("debug");
 
 let slimes = [];
 let running = false;
 
-/* 🟢 摄像头 */
+/* 摄像头 */
 async function startCamera() {
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: "environment" },
     audio: false
   });
-
   video.srcObject = stream;
 }
 
-/* 🟢 创建3个史莱姆（稳定版） */
+/* 🌊 创建5个史莱姆 */
 function createSlimes() {
 
-  const sizes = [3.4, 3, 2.8, 2.6, 2.2];
+  const sizes = [3.4, 3.0, 2.6, 2.3, 2.0];
 
   const template = document.getElementById("template");
 
@@ -133,43 +131,48 @@ function createSlimes() {
     container.appendChild(node);
 
     slimes.push({
-  el: node,
-  blob: node.querySelector(".blob"),
+      el: node,
+      blob: node.querySelector(".blob"),
 
-  x: window.innerWidth * (0.2 + i * 0.15),
-  y: window.innerHeight * (0.35 + (i % 2) * 0.3),
+      x: window.innerWidth * (0.2 + Math.random() * 0.6),
+      y: window.innerHeight * (0.2 + Math.random() * 0.6),
 
-  vx: 0,
-  vy: 0,
+      vx: (Math.random() - 0.5) * 2,
+      vy: (Math.random() - 0.5) * 2,
 
-  scale: sizes[i],
+      scale: sizes[i],
 
-  // 🧠新增：个体差异
-  speed: 0.6 + Math.random() * 1.6,
-  damping: 0.90 + Math.random() * 0.08,
-  noise: 0.01 + Math.random() * 0.04
-});
- 
+      speed: 0.8 + Math.random() * 1.2,
+      damping: 0.92 + Math.random() * 0.05,
+      noise: 0.03 + Math.random() * 0.05
+    });
+  }
+
+  template.remove();
 }
 
-/* 🟢 touch控制 */
+/* 🌬️ 手指风场（更自然扩散） */
 window.addEventListener("touchmove", (e) => {
 
   let t = e.touches[0];
-
-  let force = 0.0003;
+  let force = 0.00035;
 
   for (let s of slimes) {
 
-    let dx2 = t.clientX - s.x;
-    let dy2 = t.clientY - s.y;
+    let dx = t.clientX - s.x;
+    let dy = t.clientY - s.y;
 
-    s.vx += dx2 * force * s.speed;
-    s.vy += dy2 * force * s.speed;
+    let dist = Math.sqrt(dx*dx + dy*dy) + 0.001;
+
+    // 距离越远越弱（风的感觉）
+    let f = force / dist * 80;
+
+    s.vx += dx * f * s.speed;
+    s.vy += dy * f * s.speed;
   }
 });
 
-/* 🟢 blob */
+/* 🌊 blob */
 function makeBlob(time, offset = 0) {
 
   const points = 20;
@@ -182,8 +185,8 @@ function makeBlob(time, offset = 0) {
     let a = i * step;
 
     let wave =
-      Math.sin(i * 0.8 + time * 0.002 + offset) * 6 +
-      Math.sin(i * 1.7 - time * 0.0015 + offset) * 4;
+      Math.sin(i * 0.8 + time * 0.002 + offset) * 7 +
+      Math.sin(i * 1.7 - time * 0.0015 + offset) * 5;
 
     let r = 80 + wave;
 
@@ -196,27 +199,25 @@ function makeBlob(time, offset = 0) {
   return path + "Z";
 }
 
-/* 🟢 update（稳定物理） */
+/* 🧠 主循环 */
 function update() {
 
   if (!running) return;
 
-  // move
   for (let s of slimes) {
 
-  // 🟢 个体阻尼（不同性格）
-  s.vx *= s.damping;
-  s.vy *= s.damping;
+    // 自然漂移
+    s.vx *= s.damping;
+    s.vy *= s.damping;
 
-  // 🟢 自发漂移（防止聚死）
-  s.vx += (Math.random() - 0.5) * s.noise;
-  s.vy += (Math.random() - 0.5) * s.noise;
+    s.vx += (Math.random() - 0.5) * s.noise;
+    s.vy += (Math.random() - 0.5) * s.noise;
 
-  s.x += s.vx;
-  s.y += s.vy;
-}
+    s.x += s.vx;
+    s.y += s.vy;
+  }
 
-  // collision
+  /* 🌊 柔和碰撞 */
   for (let i = 0; i < slimes.length; i++) {
     for (let j = i + 1; j < slimes.length; j++) {
 
@@ -226,28 +227,27 @@ function update() {
       let dx = b.x - a.x;
       let dy = b.y - a.y;
 
-      let dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
-      let minDist = 150;
+      let dist = Math.sqrt(dx*dx + dy*dy) || 0.001;
+
+      let minDist = 140;
 
       if (dist < minDist) {
 
-        let force = (minDist - dist) * 0.02;
+        let force = (minDist - dist) * 0.015;
 
         let nx = dx / dist;
         let ny = dy / dist;
 
-        let repel = 1.2;
+        a.vx -= nx * force;
+        a.vy -= ny * force;
 
-        a.vx -= nx * force * repel * a.speed;
-        a.vy -= ny * force * repel * a.speed;
-
-        b.vx += nx * force * repel * b.speed;
-        b.vy += ny * force * repel * b.speed;
+        b.vx += nx * force;
+        b.vy += ny * force;
       }
     }
   }
 
-  // render
+  /* 🎨 render */
   for (let s of slimes) {
 
     s.x = Math.max(80, Math.min(window.innerWidth - 80, s.x));
@@ -269,7 +269,7 @@ function update() {
   requestAnimationFrame(update);
 }
 
-/* 🟢 启动 */
+/* 启动 */
 document.getElementById("btn").onclick = async () => {
 
   await startCamera();
