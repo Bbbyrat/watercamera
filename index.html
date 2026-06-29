@@ -1,12 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Slime Fix</title>
+
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+  background: black;
+}
+
+video {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+}
+
+.slime {
+  position: fixed;
+  width: 220px;
+  height: 220px;
+  left: 0;
+  top: 0;
+}
+</style>
+</head>
+
+<body>
+
+<video id="video" autoplay playsinline></video>
+
+<!-- 🟢模板 -->
+<div id="slime" class="slime">
+<svg viewBox="0 0 200 200">
+  <path fill="url(#grad)" d="M100 100"></path>
+
+  <defs>
+    <radialGradient id="grad">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.8)" />
+      <stop offset="100%" stop-color="rgba(40,120,255,0.4)" />
+    </radialGradient>
+  </defs>
+</svg>
+</div>
+
+<button id="snap" style="position:fixed;bottom:20px;">启动</button>
+
 <script>
 
 const video = document.getElementById("video");
 const button = document.getElementById("snap");
-const debug = document.getElementById("debug");
 
 let slimes = [];
-
-let baseScale = 3.2;
 
 /* 🟢 摄像头 */
 async function startCamera() {
@@ -18,34 +65,33 @@ async function startCamera() {
   video.srcObject = stream;
 }
 
-/* 🟢 创建3个史莱姆（核心改造点） */
+/* 🟢 创建3个 */
 function createSlimes() {
 
   const sizes = [3.2, 2.2, 1.4];
 
+  const template = document.getElementById("slime");
+
   for (let i = 0; i < 3; i++) {
 
-    let node = document.getElementById("slime").cloneNode(true);
+    let node = template.cloneNode(true);
+    node.removeAttribute("id");
     document.body.appendChild(node);
 
     slimes.push({
       el: node,
-
       x: window.innerWidth * (0.3 + i * 0.2),
       y: window.innerHeight * 0.5,
-
       vx: 0,
       vy: 0,
-
       scale: sizes[i]
     });
   }
 
-  // 删除模板
-  document.getElementById("slime").remove();
+  template.remove();
 }
 
-/* 🟢 touch控制（只控制第一个） */
+/* 🟢 touch */
 window.addEventListener("touchmove", (e) => {
 
   let t = e.touches[0];
@@ -53,21 +99,14 @@ window.addEventListener("touchmove", (e) => {
   let dx = t.clientX - window.innerWidth / 2;
   let dy = t.clientY - window.innerHeight / 2;
 
-  slimes[0].vx += dx * 0.0006;
-  slimes[0].vy += dy * 0.0006;
-
-  debug.innerText =
-    "dx: " + dx.toFixed(1) +
-    "\ndy: " + dy.toFixed(1) +
-    "\nvx: " + slimes[0].vx.toFixed(3) +
-    "\nvy: " + slimes[0].vy.toFixed(3);
+  slimes[0].vx += dx * 0.0008;
+  slimes[0].vy += dy * 0.0008;
 });
 
-/* 🟢 主更新（多体系统） */
+/* 🟢 update */
 function update() {
 
   for (let s of slimes) {
-
     s.vx *= 0.95;
     s.vy *= 0.95;
 
@@ -75,36 +114,6 @@ function update() {
     s.y += s.vy;
   }
 
-  /* 🟢 碰撞系统 */
-  for (let i = 0; i < slimes.length; i++) {
-    for (let j = i + 1; j < slimes.length; j++) {
-
-      let a = slimes[i];
-      let b = slimes[j];
-
-      let dx = b.x - a.x;
-      let dy = b.y - a.y;
-
-      let dist = Math.sqrt(dx * dx + dy * dy);
-      let minDist = 150;
-
-      if (dist < minDist) {
-
-        let force = (minDist - dist) * 0.02;
-
-        let nx = dx / dist;
-        let ny = dy / dist;
-
-        a.vx -= nx * force;
-        a.vy -= ny * force;
-
-        b.vx += nx * force;
-        b.vy += ny * force;
-      }
-    }
-  }
-
-  /* 🟢 渲染 */
   for (let s of slimes) {
 
     s.x = Math.max(80, Math.min(window.innerWidth - 80, s.x));
@@ -112,70 +121,23 @@ function update() {
 
     let angle = Math.atan2(s.vy, s.vx);
 
-    let speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
-
-    let stretchX = 1 + s.vx * 0.02;
-    let stretchY = 1 - s.vy * 0.02;
-
     s.el.style.transform =
       `translate(${s.x - 110}px, ${s.y - 110}px)
        rotate(${angle}rad)
-       scale(${s.scale * stretchX}, ${s.scale * stretchY})`;
+       scale(${s.scale})`;
   }
 
   requestAnimationFrame(update);
 }
 
-/* 🟢 blob动画（保留你的原逻辑，但给每个都动） */
-function animateBlob(time) {
-
-  let blobs = document.querySelectorAll("#blob");
-
-  blobs.forEach((blob, i) => {
-
-    blob.setAttribute("d", makeBlob(time + i * 1000));
-  });
-
-  requestAnimationFrame(animateBlob);
-}
-
-/* 🟢 blob生成 */
-function makeBlob(time) {
-
-  const points = 20;
-  const step = Math.PI * 2 / points;
-
-  let path = "";
-
-  for (let i = 0; i < points; i++) {
-
-    let angle = i * step;
-
-    let wave =
-      Math.sin(i * 0.8 + time * 0.002) * 6 +
-      Math.sin(i * 1.7 - time * 0.0015) * 4;
-
-    let r = 80 + wave;
-
-    let px = 100 + Math.cos(angle) * r;
-    let py = 100 + Math.sin(angle) * r;
-
-    path += (i === 0 ? "M" : "L") + px + " " + py + " ";
-  }
-
-  return path + "Z";
-}
-
 /* 🟢 启动 */
-button.onclick = async function () {
-
+button.onclick = async () => {
   await startCamera();
-
   createSlimes();
-
   update();
-
-  animateBlob(0);
 };
 
 </script>
+
+</body>
+</html>
