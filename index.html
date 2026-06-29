@@ -41,7 +41,12 @@ video {
   height: 100%;
   object-fit: cover;
   z-index: 0;
-  
+}
+  #video2 {
+  z-index: 1;
+  filter: blur(6px) contrast(1.2);
+  mix-blend-mode: screen;
+  opacity: 0.6;
 }
 
 /* 史莱姆层 */
@@ -111,6 +116,7 @@ button {
 <div id="overlay"></div>
 <div id="frame">
   <video id="video" autoplay playsinline></video>
+  <video id="video2" autoplay playsinline></video>
   <div id="container"></div>
 </div>
   <div id="footer">
@@ -236,6 +242,13 @@ function update() {
 
     s.x += s.vx;
     s.y += s.vy;
+    
+    if (slimes.length > 0) {
+    let s = slimes[0];
+
+    video2.style.transform =
+      `translate(${s.vx * 2}px, ${s.vy * 2}px) scale(1.02)`;
+  }
   }
 
   /* 碰撞 */
