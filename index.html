@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8" />
-<title>Stable Slime System - Dream Version</title>
+<title>Slime Field System</title>
 
 <style>
 body {
@@ -17,14 +17,15 @@ video {
   width: 100vw;
   height: 100vh;
   object-fit: cover;
-  filter: 
-    contrast(1.15)
+
+  filter:
+    contrast(1.2)
     saturate(1.4)
-    hue-rotate(170deg)
+    hue-rotate(165deg)
     brightness(0.85);
 }
 
-/* 🌫️ 梦核蓝绿雾 */
+/* 🌫️ 氛围层 */
 #overlay {
   position: fixed;
   width: 100vw;
@@ -51,7 +52,6 @@ video {
   height: 220px;
   left: 0;
   top: 0;
-  opacity: 0.95;
 }
 
 button {
@@ -104,6 +104,7 @@ button {
 
 const video = document.getElementById("video");
 const container = document.getElementById("container");
+const debug = document.getElementById("debug");
 
 let slimes = [];
 let running = false;
@@ -114,6 +115,7 @@ async function startCamera() {
     video: { facingMode: "environment" },
     audio: false
   });
+
   video.srcObject = stream;
 }
 
@@ -121,7 +123,6 @@ async function startCamera() {
 function createSlimes() {
 
   const sizes = [3.4, 3.0, 2.6, 2.3, 2.0];
-
   const template = document.getElementById("template");
 
   for (let i = 0; i < 5; i++) {
@@ -144,14 +145,19 @@ function createSlimes() {
 
       speed: 0.8 + Math.random() * 1.2,
       damping: 0.92 + Math.random() * 0.05,
-      noise: 0.03 + Math.random() * 0.05
+      noise: 0.02 + Math.random() * 0.05
     });
+  }
+
+  // 初始化 blob（关键）
+  for (let s of slimes) {
+    s.blob.setAttribute("d", makeBlob(performance.now(), 0));
   }
 
   template.remove();
 }
 
-/* 🌬️ 手指风场（更自然扩散） */
+/* 🌬️ 风场控制 */
 window.addEventListener("touchmove", (e) => {
 
   let t = e.touches[0];
@@ -163,12 +169,10 @@ window.addEventListener("touchmove", (e) => {
     let dy = t.clientY - s.y;
 
     let dist = Math.sqrt(dx*dx + dy*dy) + 0.001;
-
-    // 距离越远越弱（风的感觉）
     let f = force / dist * 80;
 
-    s.vx += dx * f * s.speed;
-    s.vy += dy * f * s.speed;
+    s.vx += dx * f;
+    s.vy += dy * f;
   }
 });
 
@@ -202,11 +206,13 @@ function makeBlob(time, offset = 0) {
 /* 🧠 主循环 */
 function update() {
 
-  if (!running) return;
+  if (!running) {
+    requestAnimationFrame(update);
+    return;
+  }
 
   for (let s of slimes) {
 
-    // 自然漂移
     s.vx *= s.damping;
     s.vy *= s.damping;
 
@@ -217,7 +223,7 @@ function update() {
     s.y += s.vy;
   }
 
-  /* 🌊 柔和碰撞 */
+  /* 碰撞 */
   for (let i = 0; i < slimes.length; i++) {
     for (let j = i + 1; j < slimes.length; j++) {
 
@@ -228,7 +234,6 @@ function update() {
       let dy = b.y - a.y;
 
       let dist = Math.sqrt(dx*dx + dy*dy) || 0.001;
-
       let minDist = 140;
 
       if (dist < minDist) {
@@ -247,7 +252,7 @@ function update() {
     }
   }
 
-  /* 🎨 render */
+  /* 渲染 */
   for (let s of slimes) {
 
     s.x = Math.max(80, Math.min(window.innerWidth - 80, s.x));
@@ -265,6 +270,8 @@ function update() {
 
     s.blob.setAttribute("d", makeBlob(performance.now(), s.scale));
   }
+
+  debug.innerText = `slimes: ${slimes.length}`;
 
   requestAnimationFrame(update);
 }
