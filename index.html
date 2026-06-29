@@ -10,7 +10,17 @@ body {
   overflow: hidden;
   background: black;
 }
+ #frame {
+  position: fixed;
+  width: 75vw;
+  height: 75vh;
+  left: 50%;
+  top: 38%;
+  transform: translate(-50%, -50%);
 
+ 
+
+  z-index: 0;
 video {
   position: fixed;
   width: 70vw;
@@ -56,17 +66,7 @@ button {
   background: rgba(0,0,0,0.5);
   padding: 6px;
 }
-  #frame {
-  position: fixed;
-  width: 75vw;
-  height: 75vh;
-  left: 50%;
-  top: 38%;
-  transform: translate(-50%, -50%);
-
  
-
-  z-index: 0;
 
   /* 外发光边框感 */
   background: linear-gradient(
