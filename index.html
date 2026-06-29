@@ -77,14 +77,9 @@ button {
 
 const video = document.getElementById("video");
 const button = document.getElementById("snap");
-const slime = document.getElementById("slime");
 const debug = document.getElementById("debug");
 
-let x = window.innerWidth / 2;
-let y = window.innerHeight / 2;
-
-let vx = 0;
-let vy = 0;
+let slimes = [];
 
 let baseScale = 3.2;
 
@@ -97,6 +92,33 @@ async function startCamera() {
 
   video.srcObject = stream;
 }
+  /* 🟢 创建3个史莱姆（核心改造点） */
+function createSlimes() {
+
+  const sizes = [3.2, 2.2, 1.4];
+
+  for (let i = 0; i < 3; i++) {
+
+    let node = document.getElementById("slime").cloneNode(true);
+    document.body.appendChild(node);
+
+    slimes.push({
+      el: node,
+
+      x: window.innerWidth * (0.3 + i * 0.2),
+      y: window.innerHeight * 0.5,
+
+      vx: 0,
+      vy: 0,
+
+      scale: sizes[i]
+    });
+  }
+
+  // 删除模板
+  document.getElementById("slime").remove();
+}
+
 
 /* touch */
 window.addEventListener("touchmove", (e) => {
@@ -111,37 +133,86 @@ window.addEventListener("touchmove", (e) => {
   debug.innerText =
     "dx: " + dx.toFixed(1) +
     "\ndy: " + dy.toFixed(1) +
-    "\nvx: " + vx.toFixed(3) +
-    "\nvy: " + vy.toFixed(3);
+    "\nvx: " + slimes[0].vx.toFixed(3) +
+    "\nvy: " + slimes[0].vy.toFixed(3);
 });
 
-/* 动画 */
+/* 🟢 主更新（多体系统） */
 function update() {
 
-  vx *= 0.95;
-  vy *= 0.95;
+  for (let s of slimes) {
 
-  x += vx;
-  y += vy;
+    s.vx *= 0.95;
+    s.vy *= 0.95;
 
-  x = Math.max(80, Math.min(window.innerWidth - 80, x));
-  y = Math.max(80, Math.min(window.innerHeight - 80, y));
+    s.x += s.vx;
+    s.y += s.vy;
+  }
 
-  let angle = Math.atan2(vy, vx);
-  let speed = Math.sqrt(vx*vx + vy*vy);
+  /* 🟢 碰撞系统 */
+  for (let i = 0; i < slimes.length; i++) {
+    for (let j = i + 1; j < slimes.length; j++) {
 
-  let stretchX = 1 + vx * 0.02;
-  let stretchY = 1 - vy * 0.02;
+      let a = slimes[i];
+      let b = slimes[j];
 
-  slime.style.transform =
-    `translate(${x - 110}px, ${y - 110}px)
-     rotate(${angle}rad)
-     scale(${baseScale * stretchX}, ${baseScale * stretchY})`;
+      let dx = b.x - a.x;
+      let dy = b.y - a.y;
+
+      let dist = Math.sqrt(dx * dx + dy * dy);
+      let minDist = 150;
+
+      if (dist < minDist) {
+
+        let force = (minDist - dist) * 0.02;
+
+        let nx = dx / dist;
+        let ny = dy / dist;
+
+        a.vx -= nx * force;
+        a.vy -= ny * force;
+
+        b.vx += nx * force;
+        b.vy += ny * force;
+      }
+    }
+  }
+
+  /* 🟢 渲染 */
+  for (let s of slimes) {
+
+    s.x = Math.max(80, Math.min(window.innerWidth - 80, s.x));
+    s.y = Math.max(80, Math.min(window.innerHeight - 80, s.y));
+
+    let angle = Math.atan2(s.vy, s.vx);
+
+    let speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
+
+    let stretchX = 1 + s.vx * 0.02;
+    let stretchY = 1 - s.vy * 0.02;
+
+    s.el.style.transform =
+      `translate(${s.x - 110}px, ${s.y - 110}px)
+       rotate(${angle}rad)
+       scale(${s.scale * stretchX}, ${s.scale * stretchY})`;
+  }
 
   requestAnimationFrame(update);
 }
 
-/* blob（改成连续流动） */
+/* 🟢 blob动画（保留你的原逻辑，但给每个都动） */
+function animateBlob(time) {
+
+  let blobs = document.querySelectorAll("#blob");
+
+  blobs.forEach((blob, i) => {
+
+    blob.setAttribute("d", makeBlob(time + i * 1000));
+  });
+
+  requestAnimationFrame(animateBlob);
+}
+  /* 🟢 blob生成 */
 function makeBlob(time) {
 
   const points = 20;
@@ -166,13 +237,6 @@ function makeBlob(time) {
   }
 
   return path + "Z";
-}
-
-function animateBlob(time) {
-  document.getElementById("blob")
-    .setAttribute("d", makeBlob(time));
-
-  requestAnimationFrame(animateBlob);
 }
 
 /* 启动 */
