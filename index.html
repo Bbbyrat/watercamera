@@ -73,6 +73,14 @@ video {
   height: auto;
   opacity: 0.9;
 }
+.blob {
+  fill: rgba(80,170,255,0.85);
+
+  filter:
+    drop-shadow(0 0 10px rgba(180,230,255,0.9))
+    drop-shadow(0 0 25px rgba(0,140,255,0.6))
+    drop-shadow(0 0 40px rgba(0,80,255,0.3));
+}
 </style>
 </head>
 
@@ -92,7 +100,7 @@ video {
 <!-- 模板 -->
 <div id="template" class="slime">
 <svg viewBox="0 0 200 200">
-  <path class="blob" fill="rgba(80,170,255,0.7)"></path>
+<path class="blob"></path>
 </svg>
 </div>
 
@@ -133,6 +141,7 @@ function createSlimes() {
     let node = template.cloneNode(true);
     node.removeAttribute("id");
     container.appendChild(node);
+    node.querySelector(".blob").style.opacity = "0.9";
 
     slimes.push({
       el: node,
