@@ -130,20 +130,6 @@ video {
   object-position: center;
   opacity: 0.9;
 }
-  #switchCam {
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
-
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: none;
-
-  background: rgba(30,144,255,0.7);
-  color: white;
-}
   
 </style>
 </head>
@@ -153,7 +139,6 @@ video {
 <!-- ⭐ 新结构：frame 包起来 -->
 <div id="overlay"></div>
 <div id="frame">
-  <button id="switchCam">Flip</button>
   <video id="video2" autoplay playsinline></video>
   <canvas id="fx"></canvas>
   <video id="video" autoplay playsinline></video>
@@ -190,23 +175,20 @@ const captureCanvas = document.createElement("canvas");
 const ctx = captureCanvas.getContext("2d");
 const fx = document.getElementById("fx");
 const fxc = fx.getContext("2d");
-let currentFacing = "environment";
 
 let slimes = [];
 let running = false;
 
 /* 摄像头 */
+function resizeFX() {
+  fx.width = window.innerWidth;
+  fx.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeFX);
+resizeFX();
 async function startCamera() {
-
-  // 如果已经有流，先关掉（很重要！）
-  if (video.srcObject) {
-    video.srcObject.getTracks().forEach(t => t.stop());
-  }
-
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: currentFacing
-    },
+    video: { facingMode: "environment" },
     audio: false
   });
 
@@ -420,12 +402,7 @@ for (let s of slimes) {
 }
 /* 启动 */
 document.getElementById("btn").onclick = async () => {
-  currentFacing =
-    currentFacing === "environment"
-      ? "user"
-      : "environment";
 
-  await startCamera();
   // ⭐ 第一次点击：启动系统
   if (!running) {
     await startCamera();
