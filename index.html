@@ -347,18 +347,21 @@ function update() {
   canvas.width = w;
   canvas.height = h;
 
-  // ⭐ 1. 画视频底层
+  // ⭐ 1. 画摄像头（关键！）
   ctx.drawImage(video, 0, 0, w, h);
 
-  // ⭐ 2. 画第二层视频（如果你有 video2）
-  if (video2 && video2.srcObject) {
-    ctx.globalAlpha = 0.4;
+  // ⭐ 2. 画模糊层（如果你有 video2）
+  if (video2) {
+    ctx.globalAlpha = 0.5;
     ctx.drawImage(video2, 0, 0, w, h);
     ctx.globalAlpha = 1;
   }
 
-  // ⭐ 3. 画史莱姆（直接截图 DOM）
-  html2canvas(container).then(slimeCanvas => {
+  // ⭐ 3. 画史莱姆（用 html2canvas 抓 DOM）
+  html2canvas(container, {
+    backgroundColor: null,
+    useCORS: true
+  }).then(slimeCanvas => {
 
     ctx.drawImage(slimeCanvas, 0, 0, w, h);
 
