@@ -54,7 +54,7 @@ video {
   height: 220px;
 }
 
-/* footer */
+/* footer 图片 */
 #footer {
   position: absolute;
   bottom: 20px;
@@ -66,6 +66,7 @@ video {
   align-items: center;
 
   pointer-events: none;
+  z-index: 5;
 }
 
 #footer img {
@@ -93,6 +94,14 @@ video {
 <div id="template" class="slime">
 <svg viewBox="0 0 200 200">
   <path class="blob" fill="rgba(80,170,255,0.7)"></path>
+
+  <defs>
+    <radialGradient id="grad">
+      <stop offset="0%" stop-color="rgba(180,230,255,0.95)" />
+      <stop offset="40%" stop-color="rgba(80,170,255,0.8)" />
+      <stop offset="100%" stop-color="rgba(0,90,255,0.35)" />
+    </radialGradient>
+  </defs>
 </svg>
 </div>
 
@@ -102,6 +111,7 @@ bottom:20px;
 left:50%;
 transform:translateX(-50%);
 z-index:10;
+padding:10px 18px;
 ">启动</button>
 
 <script>
@@ -151,7 +161,7 @@ function createSlimes() {
   template.remove();
 }
 
-/* touch */
+/* touch控制 */
 window.addEventListener("touchmove", (e) => {
   if (!slimes[0]) return;
 
@@ -191,7 +201,7 @@ function makeBlob(time, offset = 0) {
   return path + "Z";
 }
 
-/* update（修复完整） */
+/* update */
 function update() {
 
   if (!running) return;
@@ -264,7 +274,7 @@ document.getElementById("btn").onclick = async () => {
     running = true;
     update();
   } catch (err) {
-    console.error("摄像头启动失败：", err);
+    console.error("启动失败：", err);
   }
 };
 
